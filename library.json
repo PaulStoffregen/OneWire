@@ -8,7 +8,7 @@
     {
         "name": "Paul Stoffregen",
         "email": "paul@pjrc.com",
-        "url": "http://www.pjrc.com/teensy/td_libs_OneWire.html"
+        "url": "http://www.pjrc.com",
         "maintainer": true
     },
     {
@@ -32,7 +32,7 @@
     },
     {
         "name": "Jason Dangel",
-        "email": "dangel.jason AT gmail.com"
+        "email": "dangel.jason@gmail.com"
     },
     {
         "name": "Guillermo Lovato"
@@ -48,11 +48,8 @@
     },
     {
         "name": "Scott Roberts"
-    },
-]
-"version": "2.2",
-"downloadUrl": "http://www.pjrc.com/teensy/arduino_libraries/OneWire.zip",
-"include": "OneWire",
+    }
+],
 "repository":
 {
     "type": "git",
