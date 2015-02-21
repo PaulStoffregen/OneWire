@@ -105,7 +105,32 @@
 #define DIRECT_WRITE_HIGH(base, mask)   ((*(base+8+2)) = (mask))          //LATXSET + 0x28
 
 #else
-#error "Please define I/O register types here"
+
+/*
+ Fallback to Arduino GPIO API calls for all other architectures.
+
+ Operation can't be guaranteed using API calls, as the bus timings may be incorrect on some slower architectures.
+
+ Notes. 
+ BASEREG is not used, and hence the result of the macro is 0 (zero)
+
+ IO_REG_TYPE has been set to a generic data type of unsigned int , which should be available on most architectures 
+
+ IO_REG_ASM    is not used
+
+ PIN_TO_BITMASK returns the pin number, hence the bitmask private variable will be used to store the pin number rather than the bit mask,
+ This is a minor hack as the variable will not contain the item advertised by its name.
+*/
+#define PIN_TO_BASEREG(pin)            (0) 
+#define PIN_TO_BITMASK(pin)            ( pin ) 
+#define IO_REG_TYPE unsigned int
+#define IO_REG_ASM             
+#define DIRECT_READ(base, pin)       digitalRead(pin)
+#define DIRECT_WRITE_LOW(base, pin)  digitalWrite(pin, LOW)
+#define DIRECT_WRITE_HIGH(base, pin) digitalWrite(pin, HIGH)
+#define DIRECT_MODE_INPUT(base, pin) pinMode(pin,INPUT)
+#define DIRECT_MODE_OUTPUT(base, pin) pinMode(pin,OUTPUT)
+#warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
 #endif
 
 
