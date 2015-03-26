@@ -15,6 +15,7 @@ please contact Paul.
 Version 2.3:
   Unknonw chip fallback mode, Roger Clark
   Teensy-LC compatibility, Paul Stoffregen
+  Search bug fix, Love Nystrom
 
 Version 2.2:
   Teensy 3.0 compatibility, Paul Stoffregen, paul@pjrc.com
@@ -456,8 +457,9 @@ uint8_t OneWire::search(uint8_t *newAddr)
       LastDeviceFlag = FALSE;
       LastFamilyDiscrepancy = 0;
       search_result = FALSE;
+   } else {
+      for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    }
-   for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    return search_result;
   }
 
