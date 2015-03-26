@@ -12,6 +12,10 @@ works on OneWire every 6 to 12 months.  Patches usually wait that
 long.  If anyone is interested in more actively maintaining OneWire,
 please contact Paul.
 
+Version 2.3:
+  Unknonw chip fallback mode, Roger Clark
+  Teensy-LC compatibility, Paul Stoffregen
+
 Version 2.2:
   Teensy 3.0 compatibility, Paul Stoffregen, paul@pjrc.com
   Arduino Due compatibility, http://arduino.cc/forum/index.php?topic=141030
