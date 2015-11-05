@@ -50,7 +50,7 @@
 // http://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/
 // for details
 #ifndef ONEWIRE_INTERNAL_PULLUP
-#define ONEWIRE_INTERNAL_PULLUP 1
+#define ONEWIRE_INTERNAL_PULLUP 0
 #endif
 
 #define FALSE 0
