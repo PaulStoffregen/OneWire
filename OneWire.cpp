@@ -308,7 +308,7 @@ void OneWire::depower()
 {
 	noInterrupts();
 	DIRECT_MODE_INPUT(baseReg, bitmask);
-        DIRECT_WRITE_LOW(baseReg, bitmask);   // disable pull-up too
+	DIRECT_WRITE_LOW(baseReg, bitmask);   // disable pull-up too
 	interrupts();
 }
 
