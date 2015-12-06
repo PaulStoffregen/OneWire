@@ -210,7 +210,7 @@ class OneWire
     // might be a good idea to check the CRC to make sure you didn't
     // get garbage.  The order is deterministic. You will always get
     // the same devices in the same order.
-    uint8_t search(uint8_t *newAddr);
+    uint8_t search(uint8_t *newAddr, bool search_mode = true);
 #endif
 
 #if ONEWIRE_CRC

@@ -344,7 +344,7 @@ void OneWire::target_search(uint8_t family_code)
 // Return TRUE  : device found, ROM number in ROM_NO buffer
 //        FALSE : device not found, end of search
 //
-uint8_t OneWire::search(uint8_t *newAddr)
+uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 {
    uint8_t id_bit_number;
    uint8_t last_zero, rom_byte_number, search_result;
@@ -373,7 +373,11 @@ uint8_t OneWire::search(uint8_t *newAddr)
       }
 
       // issue the search command
-      write(0xF0);
+      if (search_mode == true) {
+        write(0xF0);   // NORMAL SEARCH
+      } else {
+        write(0xEC);   // CONDITIONAL SEARCH
+      }
 
       // loop to do the search
       do
