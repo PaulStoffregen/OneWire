@@ -45,6 +45,14 @@
 #define ONEWIRE_CRC16 1
 #endif
 
+// Use internal microcontroller pull-up resistor instead of
+// regular 4.7KOhms one connected externally
+// http://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/
+// for details
+#ifndef ONEWIRE_INTERNAL_PULLUP
+#define ONEWIRE_INTERNAL_PULLUP 0
+#endif
+
 #define FALSE 0
 #define TRUE  1
 
