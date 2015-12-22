@@ -185,7 +185,7 @@ void OneWire::write_bit(uint8_t v)
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(65);
-		DIRECT_MODE_INPUT(reg, mask);	// drive high on the pull-up
+		DIRECT_MODE_INPUT(reg, mask);	// drive high by the pull-up
 		interrupts();
 		delayMicroseconds(5);
 	}
@@ -205,7 +205,7 @@ uint8_t OneWire::read_bit(void)
 	DIRECT_WRITE_LOW(reg, mask);
 	DIRECT_MODE_OUTPUT(reg, mask);
 	delayMicroseconds(5);
-	DIRECT_MODE_INPUT(reg, mask);	// drive high on the pull-up
+	DIRECT_MODE_INPUT(reg, mask);	// drive high by the pull-up
 	delayMicroseconds(8);
 	r = DIRECT_READ(reg, mask);	// start sampling at 13us
 	interrupts();
@@ -271,15 +271,16 @@ uint8_t OneWire::touch(uint8_t v)
 	uint8_t r = 0;
 
 	for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-		if (OneWire::touch_bit(v)) r |= bitMask;
+		if (OneWire::touch_bit((bitMask & v)?1:0)) r|=bitMask;
 	}
 	return r;
 }
 
 void OneWire::touch_bytes(uint8_t *buf, uint16_t count)
 {
-	for (uint16_t i = 0 ; i < count ; i++)
+	for (uint16_t i = 0 ; i < count ; i++) {
 		buf[i] = OneWire::touch(buf[i]);
+	}
 }
 
 //
