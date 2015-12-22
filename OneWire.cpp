@@ -179,19 +179,13 @@ void OneWire::write_bit(uint8_t v)
 	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
 
 	if (v & 1) {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(55);
+		OneWire::read_bit();		// touch 1 on the bus
 	} else {
 		noInterrupts();
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		DIRECT_MODE_INPUT(reg, mask);	// drive high on the pull-up
 		interrupts();
 		delayMicroseconds(5);
 	}
@@ -208,14 +202,14 @@ uint8_t OneWire::read_bit(void)
 	uint8_t r;
 
 	noInterrupts();
-	DIRECT_MODE_OUTPUT(reg, mask);
 	DIRECT_WRITE_LOW(reg, mask);
-	delayMicroseconds(3);
-	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
-	delayMicroseconds(10);
-	r = DIRECT_READ(reg, mask);
+	DIRECT_MODE_OUTPUT(reg, mask);
+	delayMicroseconds(5);
+	DIRECT_MODE_INPUT(reg, mask);	// drive high on the pull-up
+	delayMicroseconds(8);
+	r = DIRECT_READ(reg, mask);	// start sampling at 13us
 	interrupts();
-	delayMicroseconds(53);
+	delayMicroseconds(52);
 	return r;
 }
 
@@ -226,29 +220,31 @@ uint8_t OneWire::read_bit(void)
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
-    uint8_t bitMask;
+void OneWire::write(uint8_t v, uint8_t power /* = 0 */)
+{
+	uint8_t bitMask;
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	OneWire::write_bit( (bitMask & v)?1:0);
-    }
-    if ( !power) {
-	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	DIRECT_WRITE_LOW(baseReg, bitmask);
-	interrupts();
-    }
+	for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+		OneWire::write_bit( (bitMask & v)?1:0);
+	}
+	if (power) {
+		noInterrupts();
+		DIRECT_WRITE_HIGH(baseReg, bitmask);
+		DIRECT_MODE_OUTPUT(baseReg, bitmask);
+		interrupts();
+	}
 }
 
-void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
-  for (uint16_t i = 0 ; i < count ; i++)
-    write(buf[i]);
-  if (!power) {
-    noInterrupts();
-    DIRECT_MODE_INPUT(baseReg, bitmask);
-    DIRECT_WRITE_LOW(baseReg, bitmask);
-    interrupts();
-  }
+void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */)
+{
+	for (uint16_t i = 0 ; i < count ; i++)
+		write(buf[i]);
+	if (power) {
+		noInterrupts();
+		DIRECT_WRITE_HIGH(baseReg, bitmask);
+		DIRECT_MODE_OUTPUT(baseReg, bitmask);
+		interrupts();
+	}
 }
 
 //
@@ -267,6 +263,23 @@ uint8_t OneWire::read() {
 void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
   for (uint16_t i = 0 ; i < count ; i++)
     buf[i] = read();
+}
+
+uint8_t OneWire::touch(uint8_t v)
+{
+	uint8_t bitMask;
+	uint8_t r = 0;
+
+	for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+		if (OneWire::touch_bit(v)) r |= bitMask;
+	}
+	return r;
+}
+
+void OneWire::touch_bytes(uint8_t *buf, uint16_t count)
+{
+	for (uint16_t i = 0 ; i < count ; i++)
+		buf[i] = OneWire::touch(buf[i]);
 }
 
 //

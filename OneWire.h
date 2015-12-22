@@ -200,6 +200,22 @@ class OneWire
     // Read a bit.
     uint8_t read_bit(void);
 
+    // Touches a bit.
+    // 1-wire bus touching depends on a touched bit 'v' as follows:
+    //  0: writes 0 on the bus, there is no bus sampling in this case
+    //     (the function returns 0),
+    //  1: writes 1 on the bus and samples for response. The response is
+    //     returned by the function.
+    uint8_t touch_bit(uint8_t v) {
+        return ((v&1) ? read_bit() : (write_bit(0), 0));
+    }
+
+    // Touches a byte and returns result.
+    uint8_t touch(uint8_t v);
+
+    // Touches an array of bytes. Result is passed back in the same buffer.
+    void touch_bytes(uint8_t *buf, uint16_t count);
+
     // Stop forcing power onto the bus. You only need to do this if
     // you used the 'power' flag to write() or used a write_bit() call
     // and aren't about to do another read or write. You would rather
