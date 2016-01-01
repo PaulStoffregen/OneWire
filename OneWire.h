@@ -56,7 +56,8 @@
 #define IO_REG_TYPE uint8_t
 #define IO_REG_ASM asm("r30")
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
-#define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) &= ~(mask))
+// input with no internal pull-up
+#define DIRECT_MODE_INPUT(base, mask)   (((*((base)+1)) &= ~(mask)), DIRECT_WRITE_LOW(base, mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
