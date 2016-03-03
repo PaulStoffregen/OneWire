@@ -519,8 +519,11 @@ uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 {
 	uint8_t crc = 0;
-	
+
 	while (len--) {
+#if defined(__AVR__)
+		crc = _crc_ibutton_update(crc, *addr++);
+#else
 		uint8_t inbyte = *addr++;
 		for (uint8_t i = 8; i; i--) {
 			uint8_t mix = (crc ^ inbyte) & 0x01;
@@ -528,6 +531,7 @@ uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 			if (mix) crc ^= 0x8C;
 			inbyte >>= 1;
 		}
+#endif
 	}
 	return crc;
 }
