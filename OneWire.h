@@ -2,6 +2,7 @@
 #define OneWire_h
 
 #include <inttypes.h>
+#include <util/crc16.h>
 
 #if ARDUINO >= 100
 #include "Arduino.h"       // for delayMicroseconds, digitalPinToBitMask, etc
