@@ -546,6 +546,11 @@ bool OneWire::check_crc16(const uint8_t* input, uint16_t len, const uint8_t* inv
 
 uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
 {
+#if defined(__AVR__)
+    for (uint16_t i = 0 ; i < len ; i++) {
+        crc = _crc16_update(crc, input[i]);
+    }
+#else
     static const uint8_t oddparity[16] =
         { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
 
@@ -564,6 +569,7 @@ uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
       cdata <<= 1;
       crc ^= cdata;
     }
+#endif
     return crc;
 }
 #endif
