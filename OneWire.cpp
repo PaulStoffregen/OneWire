@@ -521,7 +521,7 @@ uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 	uint8_t crc = 0;
 
 	while (len--) {
-		crc = _crc_ibutton_update( crc, *addr++ );
+		crc = _crc_ibutton_update(crc, *addr++);
 	}
 	return crc;
 }
