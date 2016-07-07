@@ -91,7 +91,7 @@
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+8) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
 
-#elif defined(__SAM3X8E__)
+#elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__)
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
 // http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
 // If you have trouble with OneWire on Arduino Due, please check the
