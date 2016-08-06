@@ -266,7 +266,10 @@ class OneWire
 #endif
 
   public:
-    OneWire( uint8_t pin);
+    OneWire();
+
+    // begin method allowing one wire pin to be set under Setup instead of in the constructor
+    void begin( uint8_t pin );
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
