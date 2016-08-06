@@ -267,6 +267,7 @@ class OneWire
 
   public:
     OneWire();
+    OneWire( uint8_t pin );
 
     // begin method allowing one wire pin to be set under Setup instead of in the constructor
     void begin( uint8_t pin );

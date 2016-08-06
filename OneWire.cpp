@@ -124,9 +124,10 @@ sample code bearing this copyright.
 
 #include "OneWire.h"
 
-OneWire::OneWire() 
-{
-  // empty constructor
+OneWire::OneWire() { } // empty constructor
+OneWire::OneWire(uint8_t pin) 
+{ // old style constructor, with onewire pin provided
+  begin(pin); // pass along pin to the new begin method
 }
 
 void OneWire::begin(uint8_t pin)
