@@ -12,6 +12,9 @@ works on OneWire every 6 to 12 months.  Patches usually wait that
 long.  If anyone is interested in more actively maintaining OneWire,
 please contact Paul.
 
+Version 2.3-glmfork:
+  Added .begin() method
+
 Version 2.3:
   Unknonw chip fallback mode, Roger Clark
   Teensy-LC compatibility, Paul Stoffregen
@@ -121,18 +124,22 @@ sample code bearing this copyright.
 
 #include "OneWire.h"
 
-
-OneWire::OneWire(uint8_t pin)
-{
-	pinMode(pin, INPUT);
-	bitmask = PIN_TO_BITMASK(pin);
-	baseReg = PIN_TO_BASEREG(pin);
-#if ONEWIRE_SEARCH
-	reset_search();
-#endif
+OneWire::OneWire() { } // empty constructor
+OneWire::OneWire(uint8_t pin) 
+{ // old style constructor, with onewire pin provided
+  begin(pin); // pass along pin to the new begin method
 }
 
+void OneWire::begin(uint8_t pin)
+{
+  pinMode(pin, INPUT);
+  bitmask = PIN_TO_BITMASK(pin);
+  baseReg = PIN_TO_BASEREG(pin);
+#if ONEWIRE_SEARCH
+  reset_search();
+#endif
 
+}
 // Perform the onewire reset function.  We will wait up to 250uS for
 // the bus to come high, if it doesn't then it is broken or shorted
 // and we return a 0;
