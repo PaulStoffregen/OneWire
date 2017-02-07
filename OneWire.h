@@ -124,6 +124,11 @@
 #define DIRECT_WRITE_HIGH(base, mask)   ((*(base+8+2)) = (mask))          //LATXSET + 0x28
 
 #elif defined(ARDUINO_ARCH_ESP8266)
+// Special note: I depend on the ESP community to maintain these definitions and
+// submit good pull requests.  I can not answer any ESP questions or help you
+// resolve any problems related to ESP chips.  Please do not contact me and please
+// DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
+// on ESP community forums.
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1 << pin)
 #define IO_REG_TYPE uint32_t
