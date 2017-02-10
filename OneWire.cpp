@@ -145,6 +145,9 @@ sample code bearing this copyright.
 OneWire::OneWire(uint8_t pin)
 {
 	pinMode(pin, INPUT);
+#if ONEWIRE_PULLUP
+	digitalWrite(pin, 1);
+#endif
 	bitmask = PIN_TO_BITMASK(pin);
 	baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
@@ -168,6 +171,9 @@ uint8_t OneWire::reset(void)
 
 	noInterrupts();
 	DIRECT_MODE_INPUT(reg, mask);
+#if ONEWIRE_PULLUP
+	DIRECT_WRITE_HIGH(reg, mask);
+#endif
 	interrupts();
 	// wait until the wire is high... just in case
 	do {
@@ -182,6 +188,9 @@ uint8_t OneWire::reset(void)
 	delayMicroseconds(480);
 	noInterrupts();
 	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
+#if ONEWIRE_PULLUP
+	DIRECT_WRITE_HIGH(reg, mask);
+#endif
 	delayMicroseconds(70);
 	r = !DIRECT_READ(reg, mask);
 	interrupts();
@@ -232,6 +241,9 @@ uint8_t OneWire::read_bit(void)
 	DIRECT_WRITE_LOW(reg, mask);
 	delayMicroseconds(3);
 	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
+#if ONEWIRE_PULLUP
+	DIRECT_WRITE_HIGH(reg, mask);
+#endif
 	delayMicroseconds(10);
 	r = DIRECT_READ(reg, mask);
 	interrupts();

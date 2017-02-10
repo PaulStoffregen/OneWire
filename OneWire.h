@@ -14,6 +14,13 @@
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
+// You can enable the internal pullup resistor by defining this to 1
+// Then, no external resistor is needed for search; however this is
+// only likely to work for low power devices such as DS1990.
+#ifndef ONEWIRE_PULLUP
+#define ONEWIRE_PULLUP 1
+#endif
+
 // You can exclude certain features from OneWire.  In theory, this
 // might save some space.  In practice, the compiler automatically
 // removes unused code (technically, the linker, using -fdata-sections
