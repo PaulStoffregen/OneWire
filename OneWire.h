@@ -153,7 +153,7 @@
 #define DELAY_MICROSECONDS(us)		delayMicroseconds(us)
 
 #elif defined(RBL_NRF51822)
-#include <nRF51822.h>
+#include <nRF51822_API.h>
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE uint32_t
@@ -166,7 +166,7 @@
 #define DELAY_MICROSECONDS(us)		nrf_delay_us(us)
 
 #elif defined(BLE_NANO)
-#include <nRF51822.h>
+#include <nRF51822_API.h>
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE uint32_t
