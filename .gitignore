@@ -1,0 +1,3 @@
+*.xml
+*.iml
+cmake-build-debug/
