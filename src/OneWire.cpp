@@ -143,9 +143,11 @@ sample code bearing this copyright.
 
 OneWire::OneWire(const uint8_t pin)
 {
-	pinMode(pin, INPUT);
-	bitmask = PIN_TO_BITMASK(pin);
-	baseReg = PIN_TO_BASEREG(pin);
+	// prepare pin
+    pinMode(pin, INPUT);
+	pin_bitMask = PIN_TO_BITMASK(pin);
+	pin_baseReg = PIN_TO_BASEREG(pin);
+    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
 
 	reset_search(); // really needed?
 }
@@ -159,29 +161,27 @@ OneWire::OneWire(const uint8_t pin)
 //
 bool OneWire::reset()
 {
-    io_reg_t mask = bitmask;
-	volatile io_reg_t *reg = baseReg;
 	bool success;
 	uint8_t retries = 125;
 
 	noInterrupts();
-	DIRECT_MODE_INPUT(reg, mask);
+	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
 	interrupts();
 	// wait until the wire is high... just in case
 	do {
 		if (--retries == 0) return 0;
 		delayMicroseconds(2);
-	} while ( !DIRECT_READ(reg, mask));
+	} while ( !DIRECT_READ(pin_baseReg, pin_bitMask));
 
 	noInterrupts();
-	DIRECT_WRITE_LOW(reg, mask);
-	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+	DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+	DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);	// drive output low
 	interrupts();
 	delayMicroseconds(480);
 	noInterrupts();
-	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
+	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);	// allow it to float
 	delayMicroseconds(70);
-    success = !DIRECT_READ(reg, mask);
+    success = !DIRECT_READ(pin_baseReg, pin_bitMask);
 	interrupts();
 	delayMicroseconds(410);
 	return success;
@@ -193,23 +193,20 @@ bool OneWire::reset()
 //
 void OneWire::write_bit(const bool value)
 {
-    io_reg_t mask=bitmask;
-	volatile io_reg_t *reg = baseReg;
-
 	if (value) {
 		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+		DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);	// drive output low
 		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);	// drive output high
 		interrupts();
 		delayMicroseconds(55);
 	} else {
 		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+		DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);	// drive output low
 		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);	// drive output high
 		interrupts();
 		delayMicroseconds(5);
 	}
@@ -221,17 +218,13 @@ void OneWire::write_bit(const bool value)
 //
 bool OneWire::read_bit()
 {
-    io_reg_t mask=bitmask;
-	volatile io_reg_t *reg = baseReg;
-	bool value;
-
 	noInterrupts();
-	DIRECT_MODE_OUTPUT(reg, mask);
-	DIRECT_WRITE_LOW(reg, mask);
+	DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);
+	DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
 	delayMicroseconds(3);
-	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
+	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);	// let pin float, pull up will raise
 	delayMicroseconds(10);
-	value = DIRECT_READ(reg, mask);
+	const bool value = DIRECT_READ(pin_baseReg, pin_bitMask);
 	interrupts();
 	delayMicroseconds(53);
 	return value;
@@ -249,13 +242,13 @@ void OneWire::write(const uint8_t value, const bool power)
 
     for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
     {
-	    OneWire::write_bit( (bitMask & value)?1:0);
+	    OneWire::write_bit((bitMask & value) != 0);
     }
     if (!power)
     {
 	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	DIRECT_WRITE_LOW(baseReg, bitmask);
+	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+	DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
 	interrupts();
     }
 }
@@ -270,8 +263,8 @@ void OneWire::write_bytes(const uint8_t *buf, const uint16_t count, const bool p
   if (!power)
   {
     noInterrupts();
-    DIRECT_MODE_INPUT(baseReg, bitmask);
-    DIRECT_WRITE_LOW(baseReg, bitmask);
+    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
     interrupts();
   }
 }
@@ -323,7 +316,7 @@ void OneWire::skip()
 void OneWire::depower()
 {
 	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
+	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
 	interrupts();
 }
 
@@ -335,9 +328,9 @@ void OneWire::reset_search()
 {
   // reset the search state
   LastDiscrepancy = 0;
-  LastDeviceFlag = 0;
+  LastDeviceFlag = false;
   LastFamilyDiscrepancy = 0;
-  for(int index = 7; ; index--)
+  for(uint8_t index = 7; ; index--)
   {
     ROM_NO[index] = 0;
     if ( index == 0) break;
@@ -357,7 +350,7 @@ void OneWire::target_search(const uint8_t family_code)
    }
    LastDiscrepancy = 64;
    LastFamilyDiscrepancy = 0;
-   LastDeviceFlag = 0;
+   LastDeviceFlag = false;
 }
 
 //
@@ -376,16 +369,17 @@ void OneWire::target_search(const uint8_t family_code)
 // Return TRUE  : device found, ROM number in ROM_NO buffer
 //        FALSE : device not found, end of search
 //
-uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
+bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
 {
    uint8_t id_bit_number = 1;
    uint8_t last_zero = 0;
    uint8_t rom_byte_number = 0;
-   uint8_t search_result = 0;
+   bool search_result = false;
 
    bool id_bit, cmp_id_bit;
 
-   unsigned char rom_byte_mask = 1, search_direction;
+   uint8_t rom_byte_mask = 1;
+    bool search_direction;
 
    // if the last call was not the last one
    if (!LastDeviceFlag)
@@ -415,7 +409,7 @@ uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
          cmp_id_bit = read_bit();
 
          // check for no devices on 1-wire
-         if ((id_bit == 1) && (cmp_id_bit == 1))
+         if ((id_bit) && (cmp_id_bit))
          {
              break;
          }
@@ -435,7 +429,7 @@ uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
                   search_direction = (id_bit_number == LastDiscrepancy);
 
                // if 0 was picked then record its position in LastZero
-               if (search_direction == 0)
+               if (!search_direction)
                {
                   last_zero = id_bit_number;
 
@@ -447,7 +441,7 @@ uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
 
             // set or clear the bit in the ROM byte rom_byte_number
             // with mask rom_byte_mask
-            if (search_direction == 1)
+            if (search_direction)
               ROM_NO[rom_byte_number] |= rom_byte_mask;
             else
               ROM_NO[rom_byte_number] &= ~rom_byte_mask;
@@ -471,7 +465,7 @@ uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
       while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
 
       // if the search was successful then
-      if (!(id_bit_number < 65))
+      if (id_bit_number >= 65)
       {
          // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
          LastDiscrepancy = last_zero;
@@ -485,14 +479,19 @@ uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
    }
 
    // if no device found then reset counters so next 'search' will be like a first
-   if (!search_result || !ROM_NO[0])
+   if (!search_result || (ROM_NO[0] == 0))
    {
       LastDiscrepancy = 0;
-      LastDeviceFlag = 0;
+      LastDeviceFlag = false;
       LastFamilyDiscrepancy = 0;
       search_result = false;
-   } else {
-      for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
+   }
+   else
+   {
+      for (int index = 0; index < 8; index++)
+      {
+          newAddr[index] = ROM_NO[index];
+      }
    }
    return search_result;
   }

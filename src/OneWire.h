@@ -220,8 +220,8 @@ class OneWire
 {
   private:
 
-    io_reg_t bitmask;
-    volatile io_reg_t *baseReg;
+    io_reg_t pin_bitMask;
+    volatile io_reg_t *pin_baseReg;
 
     // global search state
     unsigned char ROM_NO[8];
@@ -293,7 +293,7 @@ class OneWire
     // might be a good idea to check the CRC to make sure you didn't
     // get garbage.  The order is deterministic. You will always get
     // the same devices in the same order.
-    uint8_t search(uint8_t *newAddr, bool search_mode = true);
+    bool search(uint8_t *newAddr, bool search_mode = true);
 
 
 
