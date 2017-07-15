@@ -147,9 +147,9 @@ OneWire::OneWire(uint8_t pin)
 	pinMode(pin, INPUT);
 	bitmask = PIN_TO_BITMASK(pin);
 	baseReg = PIN_TO_BASEREG(pin);
-#if ONEWIRE_SEARCH
-	reset_search();
-#endif
+
+	reset_search(); // really needed?
+
 }
 
 
@@ -161,8 +161,8 @@ OneWire::OneWire(uint8_t pin)
 //
 uint8_t OneWire::reset(void)
 {
-	IO_REG_TYPE mask = bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+    io_reg_t mask = bitmask;
+	volatile io_reg_t *reg = baseReg;
 	uint8_t r;
 	uint8_t retries = 125;
 
@@ -195,8 +195,8 @@ uint8_t OneWire::reset(void)
 //
 void OneWire::write_bit(uint8_t v)
 {
-	IO_REG_TYPE mask=bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+    io_reg_t mask=bitmask;
+	volatile io_reg_t *reg = baseReg;
 
 	if (v & 1) {
 		noInterrupts();
@@ -223,8 +223,8 @@ void OneWire::write_bit(uint8_t v)
 //
 uint8_t OneWire::read_bit(void)
 {
-	IO_REG_TYPE mask=bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+    io_reg_t mask=bitmask;
+	volatile io_reg_t *reg = baseReg;
 	uint8_t r;
 
 	noInterrupts();
@@ -316,8 +316,6 @@ void OneWire::depower()
 	interrupts();
 }
 
-#if ONEWIRE_SEARCH
-
 //
 // You need to use this function to start a search again from the beginning.
 // You do not need to do it for the first search, though you could.
@@ -326,7 +324,7 @@ void OneWire::reset_search()
 {
   // reset the search state
   LastDiscrepancy = 0;
-  LastDeviceFlag = FALSE;
+  LastDeviceFlag = false;
   LastFamilyDiscrepancy = 0;
   for(int i = 7; ; i--) {
     ROM_NO[i] = 0;
@@ -345,7 +343,7 @@ void OneWire::target_search(uint8_t family_code)
       ROM_NO[i] = 0;
    LastDiscrepancy = 64;
    LastFamilyDiscrepancy = 0;
-   LastDeviceFlag = FALSE;
+   LastDeviceFlag = 0;
 }
 
 //
@@ -387,13 +385,13 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
       {
          // reset the search
          LastDiscrepancy = 0;
-         LastDeviceFlag = FALSE;
+         LastDeviceFlag = 0;
          LastFamilyDiscrepancy = 0;
-         return FALSE;
+         return 0;
       }
 
       // issue the search command
-      if (search_mode == true) {
+      if (search_mode) {
         write(0xF0);   // NORMAL SEARCH
       } else {
         write(0xEC);   // CONDITIONAL SEARCH
@@ -468,9 +466,9 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 
          // check for last device
          if (LastDiscrepancy == 0)
-            LastDeviceFlag = TRUE;
+            LastDeviceFlag = true;
 
-         search_result = TRUE;
+         search_result = true;
       }
    }
 
@@ -478,18 +476,17 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
    if (!search_result || !ROM_NO[0])
    {
       LastDiscrepancy = 0;
-      LastDeviceFlag = FALSE;
+      LastDeviceFlag = 0;
       LastFamilyDiscrepancy = 0;
-      search_result = FALSE;
+      search_result = false;
    } else {
       for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    }
    return search_result;
   }
 
-#endif
 
-#if ONEWIRE_CRC
+
 // The 1-Wire CRC scheme is described in Maxim Application Note 27:
 // "Understanding and Using Cyclic Redundancy Checks with Maxim iButton Products"
 //
@@ -557,7 +554,6 @@ uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 }
 #endif
 
-#if ONEWIRE_CRC16
 bool OneWire::check_crc16(const uint8_t* input, uint16_t len, const uint8_t* inverted_crc, uint16_t crc)
 {
     crc = ~crc16(input, len, crc);
@@ -592,6 +588,3 @@ uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
 #endif
     return crc;
 }
-#endif
-
-#endif

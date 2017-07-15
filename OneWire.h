@@ -1,37 +1,14 @@
 #ifndef OneWire_h
 #define OneWire_h
 
-#include <inttypes.h>
-
 #if defined(__AVR__)
 #include <util/crc16.h>
 #endif
 
-#if ARDUINO >= 100
-#include "Arduino.h"       // for delayMicroseconds, digitalPinToBitMask, etc
+#if defined(ARDUINO) && ARDUINO >= 100
+#include <Arduino.h>       // for delayMicroseconds, digitalPinToBitMask, etc
 #else
-#include "WProgram.h"      // for delayMicroseconds
-#include "pins_arduino.h"  // for digitalPinToBitMask, etc
-#endif
-
-// You can exclude certain features from OneWire.  In theory, this
-// might save some space.  In practice, the compiler automatically
-// removes unused code (technically, the linker, using -fdata-sections
-// and -ffunction-sections when compiling, and Wl,--gc-sections
-// when linking), so most of these will not result in any code size
-// reduction.  Well, unless you try to use the missing features
-// and redesign your program to not need them!  ONEWIRE_CRC8_TABLE
-// is the exception, because it selects a fast but large algorithm
-// or a small but slow algorithm.
-
-// you can exclude onewire_search by defining that to 0
-#ifndef ONEWIRE_SEARCH
-#define ONEWIRE_SEARCH 1
-#endif
-
-// You can exclude CRC checks altogether by defining this to 0
-#ifndef ONEWIRE_CRC
-#define ONEWIRE_CRC 1
+#include <inttypes.h>
 #endif
 
 // Select the table-lookup method of computing the 8-bit CRC
@@ -43,53 +20,37 @@
 #define ONEWIRE_CRC8_TABLE 1
 #endif
 
-// You can allow 16-bit CRC checks by defining this to 1
-// (Note that ONEWIRE_CRC must also be 1.)
-#ifndef ONEWIRE_CRC16
-#define ONEWIRE_CRC16 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE  1
-#endif
-
-// Platform specific I/O definitions
+// Platform specific I/O definitions TODO: outsource
 
 #if defined(__AVR__)
 #define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
-#define IO_REG_TYPE uint8_t
-#define IO_REG_ASM asm("r30")
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
+using io_reg_t = uint8_t; // define special datatype for register-access
 
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__)
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (1)
-#define IO_REG_TYPE uint8_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, mask)         (*((base)+512))
 #define DIRECT_MODE_INPUT(base, mask)   (*((base)+640) = 0)
 #define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+640) = 1)
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+256) = 1)
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+128) = 1)
+using io_reg_t = uint8_t; // define special datatype for register-access
 
 #elif defined(__MKL26Z64__)
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
-#define IO_REG_TYPE uint8_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, mask)         ((*((base)+16) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   (*((base)+20) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+20) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+8) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
+using io_reg_t = uint8_t; // define special datatype for register-access
 
 #elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__)
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
@@ -98,8 +59,6 @@
 // status of delayMicroseconds() before reporting a bug in OneWire!
 #define PIN_TO_BASEREG(pin)             (&(digitalPinToPort(pin)->PIO_PER))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
-#define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, mask)         (((*((base)+15)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+5)) = (mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+4)) = (mask))
@@ -111,17 +70,17 @@
 #ifndef pgm_read_byte
 #define pgm_read_byte(addr) (*(const uint8_t *)(addr))
 #endif
+using io_reg_t = uint32_t; // define special datatype for register-access
 
 #elif defined(__PIC32MX__)
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
-#define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, mask)         (((*(base+4)) & (mask)) ? 1 : 0)  //PORTX + 0x10
 #define DIRECT_MODE_INPUT(base, mask)   ((*(base+2)) = (mask))            //TRISXSET + 0x08
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*(base+1)) = (mask))            //TRISXCLR + 0x04
 #define DIRECT_WRITE_LOW(base, mask)    ((*(base+8+1)) = (mask))          //LATXCLR  + 0x24
 #define DIRECT_WRITE_HIGH(base, mask)   ((*(base+8+2)) = (mask))          //LATXSET + 0x28
+using io_reg_t = uint32_t; // define special datatype for register-access
 
 #elif defined(ARDUINO_ARCH_ESP8266)
 // Special note: I depend on the ESP community to maintain these definitions and
@@ -131,35 +90,32 @@
 // on ESP community forums.
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1 << pin)
-#define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, mask)         ((GPI & (mask)) ? 1 : 0)    //GPIO_IN_ADDRESS
 #define DIRECT_MODE_INPUT(base, mask)   (GPE &= ~(mask))            //GPIO_ENABLE_W1TC_ADDRESS
 #define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
+using io_reg_t = uint32_t; // define special datatype for register-access
 
 #elif defined(__SAMD21G18A__)
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
-#define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, mask)         (((*((base)+8)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) = (mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+2)) = (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+5)) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+6)) = (mask))
+using io_reg_t = uint32_t; // define special datatype for register-access
 
 #elif defined(RBL_NRF51822)
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
-#define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
 #define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
 #define DIRECT_WRITE_LOW(base, pin)     nrf_gpio_pin_clear(pin)
 #define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
 #define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL)
 #define DIRECT_MODE_OUTPUT(base, pin)   nrf_gpio_cfg_output(pin)
+using io_reg_t = uint32_t; // define special datatype for register-access
 
 #elif defined(__arc__) /* Arduino101/Genuino101 specifics */
 
@@ -178,8 +134,7 @@
 /* GPIO registers base address */
 #define PIN_TO_BASEREG(pin)		((volatile uint32_t *)g_APinDescription[pin].ulGPIOBase)
 #define PIN_TO_BITMASK(pin)		pin
-#define IO_REG_TYPE			uint32_t
-#define IO_REG_ASM
+using io_reg_t = uint32_t; // define special datatype for register-access
 
 static inline __attribute__((always_inline))
 IO_REG_TYPE directRead(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
@@ -244,14 +199,19 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 #else
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
-#define IO_REG_TYPE unsigned int
-#define IO_REG_ASM
 #define DIRECT_READ(base, pin)          digitalRead(pin)
 #define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
 #define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
 #define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
+using io_reg_t = uint32_t; // define special datatype for register-access
+
 #warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
+
+#define INPUT 1
+#define OUTPUT 0
+#define HIGH 1
+#define LOW 0
 
 #endif
 
@@ -259,18 +219,18 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 class OneWire
 {
   private:
-    IO_REG_TYPE bitmask;
-    volatile IO_REG_TYPE *baseReg;
 
-#if ONEWIRE_SEARCH
+    io_reg_t bitmask;
+    volatile io_reg_t *baseReg;
+
     // global search state
     unsigned char ROM_NO[8];
     uint8_t LastDiscrepancy;
     uint8_t LastFamilyDiscrepancy;
     uint8_t LastDeviceFlag;
-#endif
 
   public:
+
     OneWire( uint8_t pin);
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
@@ -311,7 +271,7 @@ class OneWire
     // someone shorts your bus.
     void depower(void);
 
-#if ONEWIRE_SEARCH
+
     // Clear the search state so that if will start from the beginning again.
     void reset_search();
 
@@ -326,14 +286,14 @@ class OneWire
     // get garbage.  The order is deterministic. You will always get
     // the same devices in the same order.
     uint8_t search(uint8_t *newAddr, bool search_mode = true);
-#endif
 
-#if ONEWIRE_CRC
+
+
     // Compute a Dallas Semiconductor 8 bit CRC, these are used in the
     // ROM and scratchpad registers.
     static uint8_t crc8(const uint8_t *addr, uint8_t len);
 
-#if ONEWIRE_CRC16
+
     // Compute the 1-Wire CRC16 and compare it against the received CRC.
     // Example usage (reading a DS2408):
     //    // Put everything in a buffer so we can compute the CRC easily.
@@ -369,8 +329,7 @@ class OneWire
     // @param crc - The crc starting value (optional)
     // @return The CRC16, as defined by Dallas Semiconductor.
     static uint16_t crc16(const uint8_t* input, uint16_t len, uint16_t crc = 0);
-#endif
-#endif
+
 };
 
 #endif
