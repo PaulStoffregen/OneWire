@@ -391,7 +391,7 @@ bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
          LastDiscrepancy = 0;
          LastDeviceFlag = false;
          LastFamilyDiscrepancy = 0;
-         return 0;
+         return false;
       }
 
       // issue the search command
@@ -530,12 +530,12 @@ static const uint8_t PROGMEM dscrc_table[] = {
 // compared to all those delayMicrosecond() calls.  But I got
 // confused, so I use this table from the examples.)
 //
-uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
+uint8_t OneWire::crc8(const uint8_t address[], uint8_t length, const uint8_t crc_init)
 {
-	uint8_t crc = 0;
+	uint8_t crc = crc_init;
 
-	while (len--) {
-		crc = pgm_read_byte(dscrc_table + (crc ^ *addr++));
+	while (length-- > 0) {
+		crc = pgm_read_byte(dscrc_table + (crc ^ *address++));
 	}
 	return crc;
 }
@@ -571,25 +571,31 @@ bool OneWire::check_crc16(const uint8_t* input, uint16_t len, const uint8_t* inv
     return (crc & 0xFF) == inverted_crc[0] && (crc >> 8) == inverted_crc[1];
 }
 
-uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
+uint16_t OneWire::crc16(const uint8_t address[], const uint16_t length, const uint16_t crc_init)
 {
+    uint16_t crc = crc_init; // init value
+
 #if defined(__AVR__)
-    for (uint16_t i = 0 ; i < len ; i++) {
-        crc = _crc16_update(crc, input[i]);
+    for (uint16_t i = 0 ; i < length ; i++)
+    {
+        crc = _crc16_update(crc_init, address[i]);
     }
 #else
     static const uint8_t oddparity[16] =
         { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
 
-    for (uint16_t i = 0 ; i < len ; i++) {
-      // Even though we're just copying a byte from the input,
+    for (uint16_t index = 0; index < length ; index++)
+    {
+      // Even though we're just copying a byte from the address,
       // we'll be doing 16-bit computation with it.
-      uint16_t cdata = input[i];
-      cdata = (cdata ^ crc) & 0xff;
+      uint16_t cdata = address[index];
+      cdata = (cdata ^ crc) & static_cast<uint16_t>(0xff);
       crc >>= 8;
 
-      if (oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4])
+      if ((oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4]) != 0)
+      {
           crc ^= 0xC001;
+      }
 
       cdata <<= 6;
       crc ^= cdata;

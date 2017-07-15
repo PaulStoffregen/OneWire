@@ -299,7 +299,7 @@ class OneWire
 
     // Compute a Dallas Semiconductor 8 bit CRC, these are used in the
     // ROM and scratchpad registers.
-    static uint8_t crc8(const uint8_t *addr, uint8_t len);
+    static uint8_t crc8(const uint8_t *address, uint8_t length, uint8_t crc_init = 0);
 
 
     // Compute the 1-Wire CRC16 and compare it against the received CRC.
@@ -336,7 +336,7 @@ class OneWire
     // @param len - How many bytes to use.
     // @param crc - The crc starting value (optional)
     // @return The CRC16, as defined by Dallas Semiconductor.
-    static uint16_t crc16(const uint8_t* input, uint16_t len, uint16_t crc = 0);
+    static uint16_t crc16(const uint8_t* address, uint16_t length, uint16_t crc_init = 0);
 
 };
 
