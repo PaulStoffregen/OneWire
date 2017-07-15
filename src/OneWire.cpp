@@ -141,15 +141,13 @@ sample code bearing this copyright.
 
 #include "OneWire.h"
 
-
-OneWire::OneWire(uint8_t pin)
+OneWire::OneWire(const uint8_t pin)
 {
 	pinMode(pin, INPUT);
 	bitmask = PIN_TO_BITMASK(pin);
 	baseReg = PIN_TO_BASEREG(pin);
 
 	reset_search(); // really needed?
-
 }
 
 
@@ -159,11 +157,11 @@ OneWire::OneWire(uint8_t pin)
 //
 // Returns 1 if a device asserted a presence pulse, 0 otherwise.
 //
-uint8_t OneWire::reset(void)
+bool OneWire::reset()
 {
     io_reg_t mask = bitmask;
 	volatile io_reg_t *reg = baseReg;
-	uint8_t r;
+	bool success;
 	uint8_t retries = 125;
 
 	noInterrupts();
@@ -183,22 +181,22 @@ uint8_t OneWire::reset(void)
 	noInterrupts();
 	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
 	delayMicroseconds(70);
-	r = !DIRECT_READ(reg, mask);
+    success = !DIRECT_READ(reg, mask);
 	interrupts();
 	delayMicroseconds(410);
-	return r;
+	return success;
 }
 
 //
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-void OneWire::write_bit(uint8_t v)
+void OneWire::write_bit(const bool value)
 {
     io_reg_t mask=bitmask;
 	volatile io_reg_t *reg = baseReg;
 
-	if (v & 1) {
+	if (value) {
 		noInterrupts();
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
@@ -221,11 +219,11 @@ void OneWire::write_bit(uint8_t v)
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-uint8_t OneWire::read_bit(void)
+bool OneWire::read_bit()
 {
     io_reg_t mask=bitmask;
 	volatile io_reg_t *reg = baseReg;
-	uint8_t r;
+	bool value;
 
 	noInterrupts();
 	DIRECT_MODE_OUTPUT(reg, mask);
@@ -233,10 +231,10 @@ uint8_t OneWire::read_bit(void)
 	delayMicroseconds(3);
 	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
 	delayMicroseconds(10);
-	r = DIRECT_READ(reg, mask);
+	value = DIRECT_READ(reg, mask);
 	interrupts();
 	delayMicroseconds(53);
-	return r;
+	return value;
 }
 
 //
@@ -246,13 +244,15 @@ uint8_t OneWire::read_bit(void)
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
-    uint8_t bitMask;
+void OneWire::write(const uint8_t value, const bool power)
+{
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	OneWire::write_bit( (bitMask & v)?1:0);
+    for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
+    {
+	    OneWire::write_bit( (bitMask & value)?1:0);
     }
-    if ( !power) {
+    if (!power)
+    {
 	noInterrupts();
 	DIRECT_MODE_INPUT(baseReg, bitmask);
 	DIRECT_WRITE_LOW(baseReg, bitmask);
@@ -260,10 +260,15 @@ void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
     }
 }
 
-void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
-  for (uint16_t i = 0 ; i < count ; i++)
-    write(buf[i]);
-  if (!power) {
+void OneWire::write_bytes(const uint8_t *buf, const uint16_t count, const bool power)
+{
+  for (uint16_t index = 0 ; index < count ; index++)
+  {
+      write(buf[index]);
+  }
+
+  if (!power)
+  {
     noInterrupts();
     DIRECT_MODE_INPUT(baseReg, bitmask);
     DIRECT_WRITE_LOW(baseReg, bitmask);
@@ -274,19 +279,24 @@ void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 
 //
 // Read a byte
 //
-uint8_t OneWire::read() {
-    uint8_t bitMask;
-    uint8_t r = 0;
+uint8_t OneWire::read()
+{
+    uint8_t value = 0;
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	if ( OneWire::read_bit()) r |= bitMask;
+    for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
+    {
+	    if ( OneWire::read_bit()) value |= bitMask;
     }
-    return r;
+    return value;
 }
 
-void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
-  for (uint16_t i = 0 ; i < count ; i++)
-    buf[i] = read();
+void OneWire::read_bytes(uint8_t * const buf, const uint16_t count)
+{
+  for (uint16_t index = 0 ; index < count ; index++)
+  {
+      buf[index] = read();
+  }
+
 }
 
 //
@@ -294,11 +304,12 @@ void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
 //
 void OneWire::select(const uint8_t rom[8])
 {
-    uint8_t i;
-
     write(0x55);           // Choose ROM
 
-    for (i = 0; i < 8; i++) write(rom[i]);
+    for (uint8_t index = 0; index < 8; index++)
+    {
+        write(rom[index]);
+    }
 }
 
 //
@@ -324,23 +335,26 @@ void OneWire::reset_search()
 {
   // reset the search state
   LastDiscrepancy = 0;
-  LastDeviceFlag = false;
+  LastDeviceFlag = 0;
   LastFamilyDiscrepancy = 0;
-  for(int i = 7; ; i--) {
-    ROM_NO[i] = 0;
-    if ( i == 0) break;
+  for(int index = 7; ; index--)
+  {
+    ROM_NO[index] = 0;
+    if ( index == 0) break;
   }
 }
 
 // Setup the search to find the device type 'family_code' on the next call
 // to search(*newAddr) if it is present.
 //
-void OneWire::target_search(uint8_t family_code)
+void OneWire::target_search(const uint8_t family_code)
 {
    // set the search state to find SearchFamily type devices
    ROM_NO[0] = family_code;
-   for (uint8_t i = 1; i < 8; i++)
-      ROM_NO[i] = 0;
+   for (uint8_t index = 1; index < 8; index++)
+   {
+       ROM_NO[index] = 0;
+   }
    LastDiscrepancy = 64;
    LastFamilyDiscrepancy = 0;
    LastDeviceFlag = 0;
@@ -362,20 +376,16 @@ void OneWire::target_search(uint8_t family_code)
 // Return TRUE  : device found, ROM number in ROM_NO buffer
 //        FALSE : device not found, end of search
 //
-uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
+uint8_t OneWire::search(uint8_t * const newAddr, const bool search_mode)
 {
-   uint8_t id_bit_number;
-   uint8_t last_zero, rom_byte_number, search_result;
-   uint8_t id_bit, cmp_id_bit;
+   uint8_t id_bit_number = 1;
+   uint8_t last_zero = 0;
+   uint8_t rom_byte_number = 0;
+   uint8_t search_result = 0;
 
-   unsigned char rom_byte_mask, search_direction;
+   bool id_bit, cmp_id_bit;
 
-   // initialize for search
-   id_bit_number = 1;
-   last_zero = 0;
-   rom_byte_number = 0;
-   rom_byte_mask = 1;
-   search_result = 0;
+   unsigned char rom_byte_mask = 1, search_direction;
 
    // if the last call was not the last one
    if (!LastDeviceFlag)
@@ -385,7 +395,7 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
       {
          // reset the search
          LastDiscrepancy = 0;
-         LastDeviceFlag = 0;
+         LastDeviceFlag = false;
          LastFamilyDiscrepancy = 0;
          return 0;
       }
@@ -406,7 +416,9 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 
          // check for no devices on 1-wire
          if ((id_bit == 1) && (cmp_id_bit == 1))
-            break;
+         {
+             break;
+         }
          else
          {
             // all devices coupled have 0 or 1
