@@ -161,7 +161,6 @@ OneWire::OneWire(const uint8_t pin)
 //
 bool OneWire::reset()
 {
-	bool success;
 	uint8_t retries = 125;
 
 	noInterrupts();
@@ -169,7 +168,7 @@ bool OneWire::reset()
 	interrupts();
 	// wait until the wire is high... just in case
 	do {
-		if (--retries == 0) return 0;
+		if (--retries == 0) return false;
 		delayMicroseconds(2);
 	} while ( !DIRECT_READ(pin_baseReg, pin_bitMask));
 
@@ -181,7 +180,7 @@ bool OneWire::reset()
 	noInterrupts();
 	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);	// allow it to float
 	delayMicroseconds(70);
-    success = !DIRECT_READ(pin_baseReg, pin_bitMask);
+    const bool success = !DIRECT_READ(pin_baseReg, pin_bitMask);
 	interrupts();
 	delayMicroseconds(410);
 	return success;
@@ -242,7 +241,7 @@ void OneWire::write(const uint8_t value, const bool power)
 
     for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
     {
-	    OneWire::write_bit((bitMask & value) != 0);
+	    write_bit((bitMask & value) != 0); // TODO: shifting value could be me faster
     }
     if (!power)
     {
@@ -253,9 +252,9 @@ void OneWire::write(const uint8_t value, const bool power)
     }
 }
 
-void OneWire::write_bytes(const uint8_t *buf, const uint16_t count, const bool power)
+void OneWire::write_bytes(const uint8_t *buf, const uint16_t data_size, const bool power)
 {
-  for (uint16_t index = 0 ; index < count ; index++)
+  for (uint16_t index = 0 ; index < data_size ; index++) // TODO: can be tuned
   {
       write(buf[index]);
   }
@@ -278,30 +277,36 @@ uint8_t OneWire::read()
 
     for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
     {
-	    if ( OneWire::read_bit()) value |= bitMask;
+	    if (read_bit()) value |= bitMask;
     }
     return value;
 }
 
-void OneWire::read_bytes(uint8_t * const buf, const uint16_t count)
+void OneWire::read_bytes(uint8_t data_array[], uint16_t data_size)
 {
-  for (uint16_t index = 0 ; index < count ; index++)
+  for (uint16_t index = 0 ; index < data_size ; index++)
+  //  while (data_size-- > 0)
   {
-      buf[index] = read();
-  }
+      data_array[index] = read();
 
+      //*data_array = read(); // TODO: test if it can be combined in one line
+
+      //*data_array = read(); // TODO: test if it can be combined in one line
+      //data_array++;
+  }
 }
 
 //
 // Do a ROM select
 //
-void OneWire::select(const uint8_t rom[8])
+void OneWire::select(const uint8_t rom_array[8])
 {
     write(0x55);           // Choose ROM
 
-    for (uint8_t index = 0; index < 8; index++)
+    uint8_t rom_size = 8; // clean solution with for(index) seems to be 6 byte larger
+    while (rom_size-- > 0)
     {
-        write(rom[index]);
+        write(*rom_array++);
     }
 }
 
@@ -330,11 +335,8 @@ void OneWire::reset_search()
   LastDiscrepancy = 0;
   LastDeviceFlag = false;
   LastFamilyDiscrepancy = 0;
-  for(uint8_t index = 7; ; index--)
-  {
-    ROM_NO[index] = 0;
-    if ( index == 0) break;
-  }
+
+    memset(ROM_NO, 0, 8);
 }
 
 // Setup the search to find the device type 'family_code' on the next call
@@ -344,10 +346,7 @@ void OneWire::target_search(const uint8_t family_code)
 {
    // set the search state to find SearchFamily type devices
    ROM_NO[0] = family_code;
-   for (uint8_t index = 1; index < 8; index++)
-   {
-       ROM_NO[index] = 0;
-   }
+    memset(&ROM_NO[1], 0, 7);
    LastDiscrepancy = 64;
    LastFamilyDiscrepancy = 0;
    LastDeviceFlag = false;
@@ -505,7 +504,7 @@ bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
 #if ONEWIRE_CRC8_TABLE
 // This table comes from Dallas sample code where it is freely reusable,
 // though Copyright (C) 2000 Dallas Semiconductor Corporation
-static const uint8_t PROGMEM dscrc_table[] = {
+static const uint8_t PROGMEM crc_table[] = {
       0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,
     157,195, 33,127,252,162, 64, 30, 95,  1,227,189, 62, 96,130,220,
      35,125,159,193, 66, 28,254,160,225,191, 93,  3,128,222, 60, 98,
@@ -530,12 +529,13 @@ static const uint8_t PROGMEM dscrc_table[] = {
 // compared to all those delayMicrosecond() calls.  But I got
 // confused, so I use this table from the examples.)
 //
-uint8_t OneWire::crc8(const uint8_t address[], uint8_t length, const uint8_t crc_init)
+uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8_t crc_init)
 {
 	uint8_t crc = crc_init;
 
-	while (length-- > 0) {
-		crc = pgm_read_byte(dscrc_table + (crc ^ *address++));
+    for (uint8_t index = 0; index < data_size; ++index)
+    {
+		crc = pgm_read_byte(crc_table + (crc ^ data_array[index]));
 	}
 	return crc;
 }
@@ -544,20 +544,22 @@ uint8_t OneWire::crc8(const uint8_t address[], uint8_t length, const uint8_t crc
 // Compute a Dallas Semiconductor 8 bit CRC directly.
 // this is much slower, but much smaller, than the lookup table.
 //
-uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
+uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8_t crc_init)
 {
-	uint8_t crc = 0;
+	uint8_t crc = crc_init;
 
-	while (len--) {
+    while (data_size-- > 0) // clean solution with for(index) seems to be 6 byte larger
+    {
 #if defined(__AVR__)
-		crc = _crc_ibutton_update(crc, *addr++);
+		crc = _crc_ibutton_update(crc, *data_array++);
 #else
-		uint8_t inbyte = *addr++;
-		for (uint8_t i = 8; i; i--) {
-			uint8_t mix = (crc ^ inbyte) & 0x01;
+		uint8_t inByte = *data_array++;
+		for (uint8_t bitPosition = 0; bitPosition < 8; bitPosition++)
+        {
+			const uint8_t mix = (crc ^ inByte) & static_cast<uint8_t>(0x01);
 			crc >>= 1;
-			if (mix) crc ^= 0x8C;
-			inbyte >>= 1;
+			if (mix != 0) crc ^= 0x8C;
+			inByte >>= 1;
 		}
 #endif
 	}
@@ -565,34 +567,34 @@ uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 }
 #endif
 
-bool OneWire::check_crc16(const uint8_t* input, uint16_t len, const uint8_t* inverted_crc, uint16_t crc)
+bool OneWire::check_crc16(const uint8_t data_array[], const uint16_t data_size, const uint8_t* inverted_crc, uint16_t crc)
 {
-    crc = ~crc16(input, len, crc);
+    crc = ~crc16(data_array, data_size, crc);
     return (crc & 0xFF) == inverted_crc[0] && (crc >> 8) == inverted_crc[1];
 }
 
-uint16_t OneWire::crc16(const uint8_t address[], const uint16_t length, const uint16_t crc_init)
+uint16_t OneWire::crc16(const uint8_t data_array[], uint16_t data_size, const uint16_t crc_init)
 {
     uint16_t crc = crc_init; // init value
 
 #if defined(__AVR__)
-    for (uint16_t i = 0 ; i < length ; i++)
+    while (data_size-- > 0)
     {
-        crc = _crc16_update(crc_init, address[i]);
+        crc = _crc16_update(crc, *data_array++);
     }
 #else
-    static const uint8_t oddparity[16] =
+    static const uint8_t oddParity[16] =
         { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
 
-    for (uint16_t index = 0; index < length ; index++)
+    while (data_size-- > 0) // clean solution with for(index) seems to be 6 byte larger
     {
-      // Even though we're just copying a byte from the address,
+      // Even though we're just copying a byte from the data_array,
       // we'll be doing 16-bit computation with it.
-      uint16_t cdata = address[index];
+      uint16_t cdata = *data_array++;
       cdata = (cdata ^ crc) & static_cast<uint16_t>(0xff);
       crc >>= 8;
 
-      if ((oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4]) != 0)
+      if ((oddParity[cdata & 0x0F] ^ oddParity[cdata >> 4]) != 0)
       {
           crc ^= 0xC001;
       }
