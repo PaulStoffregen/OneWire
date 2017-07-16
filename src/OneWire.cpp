@@ -144,10 +144,13 @@ sample code bearing this copyright.
 OneWire::OneWire(const uint8_t pin)
 {
     // prepare pin
+    io_reg_t _bitMask=pin_bitMask;     // local copies save pgm-space when called >1
+    volatile io_reg_t *_baseReg = pin_baseReg;
+
     pinMode(pin, INPUT);
-    pin_bitMask = PIN_TO_BITMASK(pin);
-    pin_baseReg = PIN_TO_BASEREG(pin);
-    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+    _bitMask = PIN_TO_BITMASK(pin);
+    _baseReg = PIN_TO_BASEREG(pin);
+    DIRECT_WRITE_LOW(_baseReg, _bitMask);
 
     reset_search(); // really needed?
 }
@@ -161,23 +164,26 @@ OneWire::OneWire(const uint8_t pin)
 //
 bool OneWire::reset()
 {
+    const io_reg_t _bitMask=pin_bitMask; // local copies save pgm-space when called >1
+    volatile io_reg_t *_baseReg = pin_baseReg;
+
     uint8_t retries = 125;
 
-    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+    DIRECT_MODE_INPUT(_baseReg, _bitMask);
     // wait until the wire is high... just in case
     do
     {
         if (--retries == 0) return false;
         delayMicroseconds(2);
-    } while (!DIRECT_READ(pin_baseReg, pin_bitMask));
+    } while (!DIRECT_READ(_baseReg, _bitMask));
 
-    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+    DIRECT_WRITE_LOW(_baseReg, _bitMask);
+    DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
     delayMicroseconds(480);
     noInterrupts();
-    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);    // allow it to float
+    DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
     delayMicroseconds(70);
-    const bool success = !DIRECT_READ(pin_baseReg, pin_bitMask);
+    const bool success = !DIRECT_READ(_baseReg, _bitMask);
     interrupts();
     delayMicroseconds(410);
     return success;
@@ -189,14 +195,16 @@ bool OneWire::reset()
 //
 void OneWire::write_bit(const bool value)
 {
-    const uint8_t time_high = (value ? 10 : 60);
-    const uint8_t time_low  = (value ? 55 : 5);
+    const uint8_t time_high = uint8_t(value ? 10 : 60);
+    const uint8_t time_low  = uint8_t(value ? 55 : 5);
+    const io_reg_t _bitMask=pin_bitMask; // local copies save pgm-space when called >1
+    volatile io_reg_t *_baseReg = pin_baseReg;
 
     noInterrupts();
-    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+    DIRECT_WRITE_LOW(_baseReg, _bitMask);
+    DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
     delayMicroseconds(time_high);
-    DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
+    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // drive output high
     interrupts();
     delayMicroseconds(time_low);
 }
@@ -207,13 +215,16 @@ void OneWire::write_bit(const bool value)
 //
 bool OneWire::read_bit()
 {
+    const io_reg_t _bitMask=pin_bitMask; // local copies save pgm-space when called >1
+    volatile io_reg_t *_baseReg = pin_baseReg;
+
     noInterrupts();
-    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);
+    DIRECT_WRITE_LOW(_baseReg, _bitMask);
+    DIRECT_MODE_OUTPUT(_baseReg, _bitMask);
     delayMicroseconds(3);
-    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);    // let pin float, pull up will raise
+    DIRECT_MODE_INPUT(_baseReg, _bitMask);    // let pin float, pull up will raise
     delayMicroseconds(10);
-    const bool value = DIRECT_READ(pin_baseReg, pin_bitMask);
+    const bool value = DIRECT_READ(_baseReg, _bitMask);
     interrupts();
     delayMicroseconds(53);
     return value;
