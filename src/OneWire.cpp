@@ -350,10 +350,8 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
     uint8_t rom_byte_number = 0;
     bool search_result = false;
 
-    bool id_bit, cmp_id_bit;
-
     uint8_t rom_byte_mask = 1;
-    bool search_direction;
+
 
     // if the last call was not the last one
     if (!search_last_device_flag)
@@ -382,47 +380,55 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
         do
         {
             // read a bit and its complement
-            id_bit = read_bit();
-            cmp_id_bit = read_bit();
+            const bool id_bit = read_bit();
+            const bool cmp_id_bit = read_bit();
 
             // check for no devices on 1-wire
-            if ((id_bit) && (cmp_id_bit))
+            if (id_bit && cmp_id_bit)
             {
                 break;
             }
             else
             {
+                bool search_direction;
                 // all devices coupled have 0 or 1
                 if (id_bit != cmp_id_bit)
+                {
                     search_direction = id_bit;  // bit write value for search
+                }
                 else
                 {
                     // if this discrepancy if before the Last Discrepancy
                     // on a previous next then pick the same as last time
                     if (id_bit_number < search_last_discrepancy)
+                    {
                         search_direction = ((search_rom_array[rom_byte_number] & rom_byte_mask) > 0);
+                    }
                     else
+                    {
                         // if equal to last pick 1, if not then pick 0
                         search_direction = (id_bit_number == search_last_discrepancy);
-
+                    }
                     // if 0 was picked then record its position in LastZero
                     if (!search_direction)
                     {
                         last_zero = id_bit_number;
 
                         // check for Last discrepancy in family
-                        if (last_zero < 9)
-                            search_last_family_discrepancy = last_zero;
+                        if (last_zero < 9) search_last_family_discrepancy = last_zero;
                     }
                 }
 
                 // set or clear the bit in the ROM byte rom_byte_number
                 // with mask rom_byte_mask
                 if (search_direction)
+                {
                     search_rom_array[rom_byte_number] |= rom_byte_mask;
+                }
                 else
+                {
                     search_rom_array[rom_byte_number] &= ~rom_byte_mask;
-
+                }
                 // serial number search direction write bit
                 write_bit(search_direction);
 
