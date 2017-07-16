@@ -139,7 +139,7 @@ void directModeInput(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 {
     if (SS_GPIO == GPIO_TYPE(pin)) {
         WRITE_ARC_REG(READ_ARC_REG((((IO_REG_TYPE)base) + DIR_OFFSET_SS)) & ~(0x01 << GPIO_ID(pin)),
-			((IO_REG_TYPE)(base) + DIR_OFFSET_SS));
+            ((IO_REG_TYPE)(base) + DIR_OFFSET_SS));
     } else {
         MMIO_REG_VAL_FROM_BASE((IO_REG_TYPE)base, DIR_OFFSET_SOC) &= ~(0x01 << GPIO_ID(pin));
     }
@@ -150,7 +150,7 @@ void directModeOutput(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 {
     if (SS_GPIO == GPIO_TYPE(pin)) {
         WRITE_ARC_REG(READ_ARC_REG(((IO_REG_TYPE)(base) + DIR_OFFSET_SS)) | (0x01 << GPIO_ID(pin)),
-			((IO_REG_TYPE)(base) + DIR_OFFSET_SS));
+            ((IO_REG_TYPE)(base) + DIR_OFFSET_SS));
     } else {
         MMIO_REG_VAL_FROM_BASE((IO_REG_TYPE)base, DIR_OFFSET_SOC) |= (0x01 << GPIO_ID(pin));
     }
@@ -212,34 +212,43 @@ using io_reg_t = uint32_t; // define special datatype for register-access
 
 static bool mockup_pin_value[256];
 
-template <typename T1>
-bool digitalRead(const T1 pin) { return (mockup_pin_value[pin & 0xFF] != 0); }; // mock up outputs
+template<typename T1>
+bool digitalRead(const T1 pin)
+{ return (mockup_pin_value[pin & 0xFF] != 0); }; // mock up outputs
 
-template <typename T1, typename T2>
-void digitalWrite(const T1 pin, const T2 value) { mockup_pin_value[pin & 0xFF] = value; };
+template<typename T1, typename T2>
+void digitalWrite(const T1 pin, const T2 value)
+{ mockup_pin_value[pin & 0xFF] = value; };
 
-template <typename T1, typename T2>
-void pinMode(const T1 pin, const T2 value) { mockup_pin_value[pin & 0xFF] = value; };
+template<typename T1, typename T2>
+void pinMode(const T1 pin, const T2 value)
+{ mockup_pin_value[pin & 0xFF] = value; };
 
-template <typename T1>
-T1 digitalPinToPort(const T1 pin) { return pin; };
+template<typename T1>
+T1 digitalPinToPort(const T1 pin)
+{ return pin; };
 
-template <typename T1>
-T1 * portInputRegister(const T1 port) { return port; };
+template<typename T1>
+T1 *portInputRegister(const T1 port)
+{ return port; };
 
-template <typename T1>
-T1 digitalPinToBitMask(const T1 pin) { return pin; };
+template<typename T1>
+T1 digitalPinToBitMask(const T1 pin)
+{ return pin; };
 
-constexpr uint32_t microsecondsToClockCycles(const uint32_t micros) {return (100*micros);}; // mockup, emulate 100 MHz CPU
+constexpr uint32_t microsecondsToClockCycles(const uint32_t micros)
+{ return (100 * micros); }; // mockup, emulate 100 MHz CPU
 
-template <typename T1>
-void delayMicroseconds(const T1 micros) { };
+template<typename T1>
+void delayMicroseconds(const T1 micros)
+{};
 
 /// the following fn are no templates and need to be defined in platform.cpp
 
 uint32_t micros(); // takes about 3 µs to process @ 16 MHz
 
 void cli();
+
 void sei();
 
 void noInterrupts();
@@ -256,9 +265,14 @@ void interrupts();
 #ifdef FALLBACK_ADDITIONAL_FNs // Test to make it work on aTtiny85, 8MHz
 /// README: use pin2 or pin3 for Attiny, source: https://github.com/gioblu/PJON/wiki/ATtiny-interfacing
 
-#ifndef HEX
-#define HEX 1
+#ifndef BIN
+#define BIN 1
 #endif
+
+#ifndef HEX
+#define HEX 2
+#endif
+
 
 static class serial
 {
@@ -268,18 +282,23 @@ private:
 
 public:
 
-    void print(...) { };
+    void print(...)
+    {};
 
-    void println(...) { };
+    void println(...)
+    {};
 
-    void flush() { };
-    void begin(const uint32_t speed_baud) { speed = speed_baud; };
+    void flush()
+    {};
+
+    void begin(const uint32_t speed_baud)
+    { speed = speed_baud; };
 
 } Serial;
 
 
 template<typename T1, typename T2>
-void memset(T1 * const address, const T1 initValue, const T2 bytes)
+void memset(T1 *const address, const T1 initValue, const T2 bytes)
 {
     const T2 iterations = bytes / sizeof(T1);
     for (T2 counter = 0; counter < iterations; ++counter)
@@ -290,7 +309,7 @@ void memset(T1 * const address, const T1 initValue, const T2 bytes)
 
 
 template<typename T1, typename T2>
-void memcpy(T1 * const destination, const T1 * const source, const T2 bytes)
+void memcpy(T1 *const destination, const T1 *const source, const T2 bytes)
 {
     const T2 iterations = bytes / sizeof(T1);
     for (T2 counter = 0; counter < iterations; ++counter)
@@ -300,8 +319,8 @@ void memcpy(T1 * const destination, const T1 * const source, const T2 bytes)
 }
 
 
-template <typename T1, typename T2>
-bool memcmp(const T1* const source_A, const T1* const source_B, const T2 bytes) // return true if string is different
+template<typename T1, typename T2>
+bool memcmp(const T1 *const source_A, const T1 *const source_B, const T2 bytes) // return true if string is different
 {
     const T2 iterations = bytes / sizeof(T1);
     for (T2 counter = 0; counter < iterations; ++counter)
@@ -311,17 +330,19 @@ bool memcmp(const T1* const source_A, const T1* const source_B, const T2 bytes) 
     return false;
 }
 
-void        delay(uint32_t time_millis);
-uint32_t    millis();
+void delay(uint32_t time_millis);
 
-void        wdt_reset();
-void        wdt_enable(...);
+uint32_t millis();
+
+void wdt_reset();
+
+void wdt_enable(...);
 
 #ifndef PROGMEM
 #define PROGMEM
 #endif
 
-uint8_t pgm_read_byte(const uint8_t * address);
+uint8_t pgm_read_byte(const uint8_t *address);
 
 #endif
 

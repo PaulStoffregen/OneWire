@@ -18,7 +18,7 @@
 
 class OneWire
 {
-  private:
+private:
 
     io_reg_t pin_bitMask;
     volatile io_reg_t *pin_baseReg;
@@ -27,19 +27,19 @@ class OneWire
     uint8_t search_rom_array[8];
     uint8_t search_last_discrepancy;
     uint8_t search_last_family_discrepancy;
-    bool    search_last_device_flag;
+    bool search_last_device_flag;
 
-  public:
+public:
 
     explicit OneWire(uint8_t pin);
 
     ~OneWire() = default;                             // nothing special to do here
 
-    OneWire(const OneWire& ow) = delete;             // disallow copy constructor
-    OneWire(OneWire&& ow) = default;               // default move constructor
-    OneWire& operator=(OneWire& ow) = delete;        // disallow copy assignment
-    OneWire& operator=(const OneWire& ow) = delete;  // disallow copy assignment
-    OneWire& operator=(OneWire&& ow) = delete;       // disallow move assignment
+    OneWire(const OneWire &ow) = delete;             // disallow copy constructor
+    OneWire(OneWire &&ow) = default;               // default move constructor
+    OneWire &operator=(OneWire &ow) = delete;        // disallow copy assignment
+    OneWire &operator=(const OneWire &ow) = delete;  // disallow copy assignment
+    OneWire &operator=(OneWire &&ow) = delete;       // disallow move assignment
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
@@ -96,7 +96,6 @@ class OneWire
     bool search(uint8_t new_rom_array[8], bool search_mode = true);
 
 
-
     // Compute a Dallas Semiconductor 8 bit CRC, these are used in the
     // ROM and scratchpad registers.
     static uint8_t crc8(const uint8_t data_array[], uint8_t data_size, uint8_t crc_init = 0);
@@ -109,8 +108,8 @@ class OneWire
     //    buf[0] = 0xF0;    // Read PIO Registers
     //    buf[1] = 0x88;    // LSB address
     //    buf[2] = 0x00;    // MSB address
-    //    WriteBytes(net, buf, 3);    // Write 3 cmd bytes
-    //    ReadBytes(net, buf+3, 10);  // Read 6 data bytes, 2 0xFF, 2 CRC16
+    //    WriteBytes(onewire, buf, 3);    // Write 3 cmd bytes
+    //    ReadBytes(onewire, buf+3, 10);  // Read 6 data bytes, 2 0xFF, 2 CRC16
     //    if (!CheckCRC16(buf, 11, &buf[11])) {
     //        // Handle error.
     //    }     
@@ -122,7 +121,7 @@ class OneWire
     //                       *not* at a 16-bit integer.
     // @param crc - The crc starting value (optional)
     // @return True, iff the CRC matches.
-    static bool check_crc16(const uint8_t data_array[], uint16_t data_size, const uint8_t* inverted_crc, uint16_t crc = 0);
+    static bool check_crc16(const uint8_t data_array[], uint16_t data_size, const uint8_t *inverted_crc, uint16_t crc = 0);
 
     // Compute a Dallas Semiconductor 16 bit CRC.  This is required to check
     // the integrity of data received from many 1-Wire devices.  Note that the

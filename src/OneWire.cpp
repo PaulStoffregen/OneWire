@@ -143,13 +143,13 @@ sample code bearing this copyright.
 
 OneWire::OneWire(const uint8_t pin)
 {
-	// prepare pin
+    // prepare pin
     pinMode(pin, INPUT);
-	pin_bitMask = PIN_TO_BITMASK(pin);
-	pin_baseReg = PIN_TO_BASEREG(pin);
+    pin_bitMask = PIN_TO_BITMASK(pin);
+    pin_baseReg = PIN_TO_BASEREG(pin);
     DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
 
-	reset_search(); // really needed?
+    reset_search(); // really needed?
 }
 
 
@@ -161,29 +161,30 @@ OneWire::OneWire(const uint8_t pin)
 //
 bool OneWire::reset()
 {
-	uint8_t retries = 125;
+    uint8_t retries = 125;
 
-	noInterrupts();
-	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-	interrupts();
-	// wait until the wire is high... just in case
-	do {
-		if (--retries == 0) return false;
-		delayMicroseconds(2);
-	} while ( !DIRECT_READ(pin_baseReg, pin_bitMask));
+    noInterrupts();
+    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+    interrupts();
+    // wait until the wire is high... just in case
+    do
+    {
+        if (--retries == 0) return false;
+        delayMicroseconds(2);
+    } while (!DIRECT_READ(pin_baseReg, pin_bitMask));
 
-	noInterrupts();
-	DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-	DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);	// drive output low
-	interrupts();
-	delayMicroseconds(480);
-	noInterrupts();
-	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);	// allow it to float
-	delayMicroseconds(70);
+    noInterrupts();
+    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+    interrupts();
+    delayMicroseconds(480);
+    noInterrupts();
+    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);    // allow it to float
+    delayMicroseconds(70);
     const bool success = !DIRECT_READ(pin_baseReg, pin_bitMask);
-	interrupts();
-	delayMicroseconds(410);
-	return success;
+    interrupts();
+    delayMicroseconds(410);
+    return success;
 }
 
 //
@@ -192,23 +193,25 @@ bool OneWire::reset()
 //
 void OneWire::write_bit(const bool value)
 {
-	if (value) {
-		noInterrupts();
-		DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-		DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);	// drive output low
-		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);	// drive output high
-		interrupts();
-		delayMicroseconds(55);
-	} else {
-		noInterrupts();
-		DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-		DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);	// drive output low
-		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);	// drive output high
-		interrupts();
-		delayMicroseconds(5);
-	}
+    if (value)
+    {
+        noInterrupts();
+        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+        DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+        delayMicroseconds(10);
+        DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
+        interrupts();
+        delayMicroseconds(55);
+    } else
+    {
+        noInterrupts();
+        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+        DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+        delayMicroseconds(65);
+        DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
+        interrupts();
+        delayMicroseconds(5);
+    }
 }
 
 //
@@ -217,16 +220,16 @@ void OneWire::write_bit(const bool value)
 //
 bool OneWire::read_bit()
 {
-	noInterrupts();
-	DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);
-	DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-	delayMicroseconds(3);
-	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);	// let pin float, pull up will raise
-	delayMicroseconds(10);
-	const bool value = DIRECT_READ(pin_baseReg, pin_bitMask);
-	interrupts();
-	delayMicroseconds(53);
-	return value;
+    noInterrupts();
+    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);
+    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+    delayMicroseconds(3);
+    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);    // let pin float, pull up will raise
+    delayMicroseconds(10);
+    const bool value = DIRECT_READ(pin_baseReg, pin_bitMask);
+    interrupts();
+    delayMicroseconds(53);
+    return value;
 }
 
 //
@@ -241,31 +244,31 @@ void OneWire::write(const uint8_t value, const bool power)
 
     for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
     {
-	    write_bit((bitMask & value) != 0); // TODO: shifting value could be me faster
+        write_bit((bitMask & value) != 0); // TODO: shifting value could be me faster
     }
     if (!power)
     {
-	noInterrupts();
-	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-	DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-	interrupts();
+        noInterrupts();
+        DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+        interrupts();
     }
 }
 
 void OneWire::write_bytes(const uint8_t *buf, const uint16_t data_size, const bool power)
 {
-  for (uint16_t index = 0 ; index < data_size ; index++) // TODO: can be tuned
-  {
-      write(buf[index]);
-  }
+    for (uint16_t index = 0; index < data_size; index++) // TODO: can be tuned
+    {
+        write(buf[index]);
+    }
 
-  if (!power)
-  {
-    noInterrupts();
-    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-    interrupts();
-  }
+    if (!power)
+    {
+        noInterrupts();
+        DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+        interrupts();
+    }
 }
 
 //
@@ -277,23 +280,23 @@ uint8_t OneWire::read()
 
     for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
     {
-	    if (read_bit()) value |= bitMask;
+        if (read_bit()) value |= bitMask;
     }
     return value;
 }
 
 void OneWire::read_bytes(uint8_t data_array[], uint16_t data_size)
 {
-  for (uint16_t index = 0 ; index < data_size ; index++)
-  //  while (data_size-- > 0)
-  {
-      data_array[index] = read();
+    for (uint16_t index = 0; index < data_size; index++)
+    //  while (data_size-- > 0)
+    {
+        data_array[index] = read();
 
-      //*data_array = read(); // TODO: test if it can be combined in one line
+        //*data_array = read(); // TODO: test if it can be combined in one line
 
-      //*data_array = read(); // TODO: test if it can be combined in one line
-      //data_array++;
-  }
+        //*data_array = read(); // TODO: test if it can be combined in one line
+        //data_array++;
+    }
 }
 
 //
@@ -320,9 +323,9 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
-	noInterrupts();
-	DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-	interrupts();
+    noInterrupts();
+    DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+    interrupts();
 }
 
 //
@@ -331,10 +334,10 @@ void OneWire::depower()
 //
 void OneWire::reset_search()
 {
-  // reset the search state
-  search_last_discrepancy = 0;
-  search_last_device_flag = false;
-  search_last_family_discrepancy = 0;
+    // reset the search state
+    search_last_discrepancy = 0;
+    search_last_device_flag = false;
+    search_last_family_discrepancy = 0;
 
     memset(search_rom_array, 0, 8);
 }
@@ -344,12 +347,12 @@ void OneWire::reset_search()
 //
 void OneWire::target_search(const uint8_t family_code)
 {
-   // set the search state to find SearchFamily type devices
-   search_rom_array[0] = family_code;
+    // set the search state to find SearchFamily type devices
+    search_rom_array[0] = family_code;
     memset(&search_rom_array[1], 0, 7);
-   search_last_discrepancy = 64;
-   search_last_family_discrepancy = 0;
-   search_last_device_flag = false;
+    search_last_discrepancy = 64;
+    search_last_family_discrepancy = 0;
+    search_last_device_flag = false;
 }
 
 //
@@ -370,130 +373,130 @@ void OneWire::target_search(const uint8_t family_code)
 //
 bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
 {
-   uint8_t id_bit_number = 1;
-   uint8_t last_zero = 0;
-   uint8_t rom_byte_number = 0;
-   bool search_result = false;
+    uint8_t id_bit_number = 1;
+    uint8_t last_zero = 0;
+    uint8_t rom_byte_number = 0;
+    bool search_result = false;
 
-   bool id_bit, cmp_id_bit;
+    bool id_bit, cmp_id_bit;
 
-   uint8_t rom_byte_mask = 1;
+    uint8_t rom_byte_mask = 1;
     bool search_direction;
 
-   // if the last call was not the last one
-   if (!search_last_device_flag)
-   {
-      // 1-Wire reset
-      if (!reset())
-      {
-         // reset the search
-         search_last_discrepancy = 0;
-         search_last_device_flag = false;
-         search_last_family_discrepancy = 0;
-         return false;
-      }
+    // if the last call was not the last one
+    if (!search_last_device_flag)
+    {
+        // 1-Wire reset
+        if (!reset())
+        {
+            // reset the search
+            search_last_discrepancy = 0;
+            search_last_device_flag = false;
+            search_last_family_discrepancy = 0;
+            return false;
+        }
 
-      // issue the search command
-      if (search_mode) {
-        write(0xF0);   // NORMAL SEARCH
-      } else {
-        write(0xEC);   // CONDITIONAL SEARCH
-      }
+        // issue the search command
+        if (search_mode)
+        {
+            write(0xF0);   // NORMAL SEARCH
+        } else
+        {
+            write(0xEC);   // CONDITIONAL SEARCH
+        }
 
-      // loop to do the search
-      do
-      {
-         // read a bit and its complement
-         id_bit = read_bit();
-         cmp_id_bit = read_bit();
+        // loop to do the search
+        do
+        {
+            // read a bit and its complement
+            id_bit = read_bit();
+            cmp_id_bit = read_bit();
 
-         // check for no devices on 1-wire
-         if ((id_bit) && (cmp_id_bit))
-         {
-             break;
-         }
-         else
-         {
-            // all devices coupled have 0 or 1
-            if (id_bit != cmp_id_bit)
-               search_direction = id_bit;  // bit write value for search
+            // check for no devices on 1-wire
+            if ((id_bit) && (cmp_id_bit))
+            {
+                break;
+            }
             else
             {
-               // if this discrepancy if before the Last Discrepancy
-               // on a previous next then pick the same as last time
-               if (id_bit_number < search_last_discrepancy)
-                  search_direction = ((search_rom_array[rom_byte_number] & rom_byte_mask) > 0);
-               else
-                  // if equal to last pick 1, if not then pick 0
-                  search_direction = (id_bit_number == search_last_discrepancy);
+                // all devices coupled have 0 or 1
+                if (id_bit != cmp_id_bit)
+                    search_direction = id_bit;  // bit write value for search
+                else
+                {
+                    // if this discrepancy if before the Last Discrepancy
+                    // on a previous next then pick the same as last time
+                    if (id_bit_number < search_last_discrepancy)
+                        search_direction = ((search_rom_array[rom_byte_number] & rom_byte_mask) > 0);
+                    else
+                        // if equal to last pick 1, if not then pick 0
+                        search_direction = (id_bit_number == search_last_discrepancy);
 
-               // if 0 was picked then record its position in LastZero
-               if (!search_direction)
-               {
-                  last_zero = id_bit_number;
+                    // if 0 was picked then record its position in LastZero
+                    if (!search_direction)
+                    {
+                        last_zero = id_bit_number;
 
-                  // check for Last discrepancy in family
-                  if (last_zero < 9)
-                     search_last_family_discrepancy = last_zero;
-               }
+                        // check for Last discrepancy in family
+                        if (last_zero < 9)
+                            search_last_family_discrepancy = last_zero;
+                    }
+                }
+
+                // set or clear the bit in the ROM byte rom_byte_number
+                // with mask rom_byte_mask
+                if (search_direction)
+                    search_rom_array[rom_byte_number] |= rom_byte_mask;
+                else
+                    search_rom_array[rom_byte_number] &= ~rom_byte_mask;
+
+                // serial number search direction write bit
+                write_bit(search_direction);
+
+                // increment the byte counter id_bit_number
+                // and shift the mask rom_byte_mask
+                id_bit_number++;
+                rom_byte_mask <<= 1;
+
+                // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
+                if (rom_byte_mask == 0)
+                {
+                    rom_byte_number++;
+                    rom_byte_mask = 1;
+                }
             }
+        } while (rom_byte_number < 8);  // loop until through all ROM bytes 0-7
 
-            // set or clear the bit in the ROM byte rom_byte_number
-            // with mask rom_byte_mask
-            if (search_direction)
-              search_rom_array[rom_byte_number] |= rom_byte_mask;
-            else
-              search_rom_array[rom_byte_number] &= ~rom_byte_mask;
+        // if the search was successful then
+        if (id_bit_number >= 65)
+        {
+            // search successful so set search_last_discrepancy,search_last_device_flag,search_result
+            search_last_discrepancy = last_zero;
 
-            // serial number search direction write bit
-            write_bit(search_direction);
+            // check for last device
+            if (search_last_discrepancy == 0)
+                search_last_device_flag = true;
 
-            // increment the byte counter id_bit_number
-            // and shift the mask rom_byte_mask
-            id_bit_number++;
-            rom_byte_mask <<= 1;
+            search_result = true;
+        }
+    }
 
-            // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
-            if (rom_byte_mask == 0)
-            {
-                rom_byte_number++;
-                rom_byte_mask = 1;
-            }
-         }
-      }
-      while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
-
-      // if the search was successful then
-      if (id_bit_number >= 65)
-      {
-         // search successful so set search_last_discrepancy,search_last_device_flag,search_result
-         search_last_discrepancy = last_zero;
-
-         // check for last device
-         if (search_last_discrepancy == 0)
-            search_last_device_flag = true;
-
-         search_result = true;
-      }
-   }
-
-   // if no device found then reset counters so next 'search' will be like a first
-   if (!search_result || (search_rom_array[0] == 0))
-   {
-      search_last_discrepancy = 0;
-      search_last_device_flag = false;
-      search_last_family_discrepancy = 0;
-      search_result = false;
-   }
-   else
-   {
-      for (int index = 0; index < 8; index++)
-      {
-          new_rom_array[index] = search_rom_array[index];
-      }
-   }
-   return search_result;
-  }
+    // if no device found then reset counters so next 'search' will be like a first
+    if (!search_result || (search_rom_array[0] == 0))
+    {
+        search_last_discrepancy = 0;
+        search_last_device_flag = false;
+        search_last_family_discrepancy = 0;
+        search_result = false;
+    } else
+    {
+        for (int index = 0; index < 8; index++)
+        {
+            new_rom_array[index] = search_rom_array[index];
+        }
+    }
+    return search_result;
+}
 
 
 
@@ -505,22 +508,22 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
 // This table comes from Dallas sample code where it is freely reusable,
 // though Copyright (C) 2000 Dallas Semiconductor Corporation
 static const uint8_t PROGMEM crc_table[] = {
-      0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,
-    157,195, 33,127,252,162, 64, 30, 95,  1,227,189, 62, 96,130,220,
-     35,125,159,193, 66, 28,254,160,225,191, 93,  3,128,222, 60, 98,
-    190,224,  2, 92,223,129, 99, 61,124, 34,192,158, 29, 67,161,255,
-     70, 24,250,164, 39,121,155,197,132,218, 56,102,229,187, 89,  7,
-    219,133,103, 57,186,228,  6, 88, 25, 71,165,251,120, 38,196,154,
-    101, 59,217,135,  4, 90,184,230,167,249, 27, 69,198,152,122, 36,
-    248,166, 68, 26,153,199, 37,123, 58,100,134,216, 91,  5,231,185,
-    140,210, 48,110,237,179, 81, 15, 78, 16,242,172, 47,113,147,205,
-     17, 79,173,243,112, 46,204,146,211,141,111, 49,178,236, 14, 80,
-    175,241, 19, 77,206,144,114, 44,109, 51,209,143, 12, 82,176,238,
-     50,108,142,208, 83, 13,239,177,240,174, 76, 18,145,207, 45,115,
-    202,148,118, 40,171,245, 23, 73,  8, 86,180,234,105, 55,213,139,
-     87,  9,235,181, 54,104,138,212,149,203, 41,119,244,170, 72, 22,
-    233,183, 85, 11,136,214, 52,106, 43,117,151,201, 74, 20,246,168,
-    116, 42,200,150, 21, 75,169,247,182,232, 10, 84,215,137,107, 53};
+        0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
+        157, 195, 33, 127, 252, 162, 64, 30, 95, 1, 227, 189, 62, 96, 130, 220,
+        35, 125, 159, 193, 66, 28, 254, 160, 225, 191, 93, 3, 128, 222, 60, 98,
+        190, 224, 2, 92, 223, 129, 99, 61, 124, 34, 192, 158, 29, 67, 161, 255,
+        70, 24, 250, 164, 39, 121, 155, 197, 132, 218, 56, 102, 229, 187, 89, 7,
+        219, 133, 103, 57, 186, 228, 6, 88, 25, 71, 165, 251, 120, 38, 196, 154,
+        101, 59, 217, 135, 4, 90, 184, 230, 167, 249, 27, 69, 198, 152, 122, 36,
+        248, 166, 68, 26, 153, 199, 37, 123, 58, 100, 134, 216, 91, 5, 231, 185,
+        140, 210, 48, 110, 237, 179, 81, 15, 78, 16, 242, 172, 47, 113, 147, 205,
+        17, 79, 173, 243, 112, 46, 204, 146, 211, 141, 111, 49, 178, 236, 14, 80,
+        175, 241, 19, 77, 206, 144, 114, 44, 109, 51, 209, 143, 12, 82, 176, 238,
+        50, 108, 142, 208, 83, 13, 239, 177, 240, 174, 76, 18, 145, 207, 45, 115,
+        202, 148, 118, 40, 171, 245, 23, 73, 8, 86, 180, 234, 105, 55, 213, 139,
+        87, 9, 235, 181, 54, 104, 138, 212, 149, 203, 41, 119, 244, 170, 72, 22,
+        233, 183, 85, 11, 136, 214, 52, 106, 43, 117, 151, 201, 74, 20, 246, 168,
+        116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53};
 
 //
 // Compute a Dallas Semiconductor 8 bit CRC. These show up in the ROM
@@ -531,14 +534,15 @@ static const uint8_t PROGMEM crc_table[] = {
 //
 uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8_t crc_init)
 {
-	uint8_t crc = crc_init;
+    uint8_t crc = crc_init;
 
     for (uint8_t index = 0; index < data_size; ++index)
     {
-		crc = pgm_read_byte(crc_table + (crc ^ data_array[index]));
-	}
-	return crc;
+        crc = pgm_read_byte(crc_table + (crc ^ data_array[index]));
+    }
+    return crc;
 }
+
 #else
 //
 // Compute a Dallas Semiconductor 8 bit CRC directly.
@@ -546,28 +550,28 @@ uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8
 //
 uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8_t crc_init)
 {
-	uint8_t crc = crc_init;
+    uint8_t crc = crc_init;
 
     while (data_size-- > 0) // clean solution with for(index) seems to be 6 byte larger
     {
 #if defined(__AVR__)
-		crc = _crc_ibutton_update(crc, *data_array++);
+        crc = _crc_ibutton_update(crc, *data_array++);
 #else
-		uint8_t inByte = *data_array++;
-		for (uint8_t bitPosition = 0; bitPosition < 8; bitPosition++)
+        uint8_t inByte = *data_array++;
+        for (uint8_t bitPosition = 0; bitPosition < 8; bitPosition++)
         {
-			const uint8_t mix = (crc ^ inByte) & static_cast<uint8_t>(0x01);
-			crc >>= 1;
-			if (mix != 0) crc ^= 0x8C;
-			inByte >>= 1;
-		}
+            const uint8_t mix = (crc ^ inByte) & static_cast<uint8_t>(0x01);
+            crc >>= 1;
+            if (mix != 0) crc ^= 0x8C;
+            inByte >>= 1;
+        }
 #endif
-	}
-	return crc;
+    }
+    return crc;
 }
 #endif
 
-bool OneWire::check_crc16(const uint8_t data_array[], const uint16_t data_size, const uint8_t* inverted_crc, uint16_t crc)
+bool OneWire::check_crc16(const uint8_t data_array[], const uint16_t data_size, const uint8_t *inverted_crc, uint16_t crc)
 {
     crc = ~crc16(data_array, data_size, crc);
     return (crc & 0xFF) == inverted_crc[0] && (crc >> 8) == inverted_crc[1];
@@ -584,25 +588,25 @@ uint16_t OneWire::crc16(const uint8_t data_array[], uint16_t data_size, const ui
     }
 #else
     static const uint8_t oddParity[16] =
-        { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
+            {0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0};
 
     while (data_size-- > 0) // clean solution with for(index) seems to be 6 byte larger
     {
-      // Even though we're just copying a byte from the data_array,
-      // we'll be doing 16-bit computation with it.
-      uint16_t cdata = *data_array++;
-      cdata = (cdata ^ crc) & static_cast<uint16_t>(0xff);
-      crc >>= 8;
+        // Even though we're just copying a byte from the data_array,
+        // we'll be doing 16-bit computation with it.
+        uint16_t cdata = *data_array++;
+        cdata = (cdata ^ crc) & static_cast<uint16_t>(0xff);
+        crc >>= 8;
 
-      if ((oddParity[cdata & 0x0F] ^ oddParity[cdata >> 4]) != 0)
-      {
-          crc ^= 0xC001;
-      }
+        if ((oddParity[cdata & 0x0F] ^ oddParity[cdata >> 4]) != 0)
+        {
+            crc ^= 0xC001;
+        }
 
-      cdata <<= 6;
-      crc ^= cdata;
-      cdata <<= 1;
-      crc ^= cdata;
+        cdata <<= 6;
+        crc ^= cdata;
+        cdata <<= 1;
+        crc ^= cdata;
     }
 #endif
     return crc;
