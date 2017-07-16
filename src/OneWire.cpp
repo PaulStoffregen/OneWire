@@ -144,13 +144,10 @@ sample code bearing this copyright.
 OneWire::OneWire(const uint8_t pin)
 {
     // prepare pin
-    io_reg_t _bitMask=pin_bitMask;     // local copies save pgm-space when called >1
-    volatile io_reg_t *_baseReg = pin_baseReg;
-
     pinMode(pin, INPUT);
-    _bitMask = PIN_TO_BITMASK(pin);
-    _baseReg = PIN_TO_BASEREG(pin);
-    DIRECT_WRITE_LOW(_baseReg, _bitMask);
+    pin_bitMask = PIN_TO_BITMASK(pin);
+    pin_baseReg = PIN_TO_BASEREG(pin);
+    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
 
     reset_search(); // really needed?
 }
