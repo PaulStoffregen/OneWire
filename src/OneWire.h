@@ -16,9 +16,6 @@
 #define ONEWIRE_CRC8_TABLE 1
 #endif
 
-
-
-
 class OneWire
 {
   private:
@@ -26,11 +23,11 @@ class OneWire
     io_reg_t pin_bitMask;
     volatile io_reg_t *pin_baseReg;
 
-    // global search state
-    uint8_t ROM_NO[8];
-    uint8_t LastDiscrepancy;
-    uint8_t LastFamilyDiscrepancy;
-    bool LastDeviceFlag;
+    // search state
+    uint8_t search_rom_array[8];
+    uint8_t search_last_discrepancy;
+    uint8_t search_last_family_discrepancy;
+    bool    search_last_device_flag;
 
   public:
 
@@ -70,7 +67,7 @@ class OneWire
 
     // Write a bit. The bus is always left powered at the end, see
     // note in write() about that.
-    void write_bit(bool v);
+    void write_bit(bool value);
 
     // Read a bit.
     bool read_bit();
@@ -96,7 +93,7 @@ class OneWire
     // might be a good idea to check the CRC to make sure you didn't
     // get garbage.  The order is deterministic. You will always get
     // the same devices in the same order.
-    bool search(uint8_t *newAddr, bool search_mode = true);
+    bool search(uint8_t new_rom_array[8], bool search_mode = true);
 
 
 

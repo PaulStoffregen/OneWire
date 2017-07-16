@@ -332,11 +332,11 @@ void OneWire::depower()
 void OneWire::reset_search()
 {
   // reset the search state
-  LastDiscrepancy = 0;
-  LastDeviceFlag = false;
-  LastFamilyDiscrepancy = 0;
+  search_last_discrepancy = 0;
+  search_last_device_flag = false;
+  search_last_family_discrepancy = 0;
 
-    memset(ROM_NO, 0, 8);
+    memset(search_rom_array, 0, 8);
 }
 
 // Setup the search to find the device type 'family_code' on the next call
@@ -345,11 +345,11 @@ void OneWire::reset_search()
 void OneWire::target_search(const uint8_t family_code)
 {
    // set the search state to find SearchFamily type devices
-   ROM_NO[0] = family_code;
-    memset(&ROM_NO[1], 0, 7);
-   LastDiscrepancy = 64;
-   LastFamilyDiscrepancy = 0;
-   LastDeviceFlag = false;
+   search_rom_array[0] = family_code;
+    memset(&search_rom_array[1], 0, 7);
+   search_last_discrepancy = 64;
+   search_last_family_discrepancy = 0;
+   search_last_device_flag = false;
 }
 
 //
@@ -365,10 +365,10 @@ void OneWire::target_search(const uint8_t family_code)
 //--------------------------------------------------------------------------
 // Perform the 1-Wire Search Algorithm on the 1-Wire bus using the existing
 // search state.
-// Return TRUE  : device found, ROM number in ROM_NO buffer
+// Return TRUE  : device found, ROM number in search_rom_array buffer
 //        FALSE : device not found, end of search
 //
-bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
+bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
 {
    uint8_t id_bit_number = 1;
    uint8_t last_zero = 0;
@@ -381,15 +381,15 @@ bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
     bool search_direction;
 
    // if the last call was not the last one
-   if (!LastDeviceFlag)
+   if (!search_last_device_flag)
    {
       // 1-Wire reset
       if (!reset())
       {
          // reset the search
-         LastDiscrepancy = 0;
-         LastDeviceFlag = false;
-         LastFamilyDiscrepancy = 0;
+         search_last_discrepancy = 0;
+         search_last_device_flag = false;
+         search_last_family_discrepancy = 0;
          return false;
       }
 
@@ -421,11 +421,11 @@ bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
             {
                // if this discrepancy if before the Last Discrepancy
                // on a previous next then pick the same as last time
-               if (id_bit_number < LastDiscrepancy)
-                  search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
+               if (id_bit_number < search_last_discrepancy)
+                  search_direction = ((search_rom_array[rom_byte_number] & rom_byte_mask) > 0);
                else
                   // if equal to last pick 1, if not then pick 0
-                  search_direction = (id_bit_number == LastDiscrepancy);
+                  search_direction = (id_bit_number == search_last_discrepancy);
 
                // if 0 was picked then record its position in LastZero
                if (!search_direction)
@@ -434,16 +434,16 @@ bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
 
                   // check for Last discrepancy in family
                   if (last_zero < 9)
-                     LastFamilyDiscrepancy = last_zero;
+                     search_last_family_discrepancy = last_zero;
                }
             }
 
             // set or clear the bit in the ROM byte rom_byte_number
             // with mask rom_byte_mask
             if (search_direction)
-              ROM_NO[rom_byte_number] |= rom_byte_mask;
+              search_rom_array[rom_byte_number] |= rom_byte_mask;
             else
-              ROM_NO[rom_byte_number] &= ~rom_byte_mask;
+              search_rom_array[rom_byte_number] &= ~rom_byte_mask;
 
             // serial number search direction write bit
             write_bit(search_direction);
@@ -466,30 +466,30 @@ bool OneWire::search(uint8_t * const newAddr, const bool search_mode)
       // if the search was successful then
       if (id_bit_number >= 65)
       {
-         // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
-         LastDiscrepancy = last_zero;
+         // search successful so set search_last_discrepancy,search_last_device_flag,search_result
+         search_last_discrepancy = last_zero;
 
          // check for last device
-         if (LastDiscrepancy == 0)
-            LastDeviceFlag = true;
+         if (search_last_discrepancy == 0)
+            search_last_device_flag = true;
 
          search_result = true;
       }
    }
 
    // if no device found then reset counters so next 'search' will be like a first
-   if (!search_result || (ROM_NO[0] == 0))
+   if (!search_result || (search_rom_array[0] == 0))
    {
-      LastDiscrepancy = 0;
-      LastDeviceFlag = false;
-      LastFamilyDiscrepancy = 0;
+      search_last_discrepancy = 0;
+      search_last_device_flag = false;
+      search_last_family_discrepancy = 0;
       search_result = false;
    }
    else
    {
       for (int index = 0; index < 8; index++)
       {
-          newAddr[index] = ROM_NO[index];
+          new_rom_array[index] = search_rom_array[index];
       }
    }
    return search_result;
