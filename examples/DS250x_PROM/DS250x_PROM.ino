@@ -39,6 +39,8 @@ void loop()
 
     uint8_t device_rom[8];
 
+    delay(50);
+
     if (!oneWire.search(device_rom))
     {
         Serial.println("No more addresses.");
@@ -54,34 +56,34 @@ void loop()
         Serial.print(device_rom[index], HEX);
     }
 
-    if (OneWire::crc8(device_rom, 7) != device_rom[7])
+    if (device_rom[7] != oneWire.crc8(device_rom, 7))
     {
-        Serial.println(" ERROR: CRC is not valid!");
+        Serial.println(" - ERROR: CRC not valid!");
         return;
     }
 
     // start of device dependent code
-
+    Serial.print(" - Chip = ");
     switch (device_rom[0])
     {
         case 0x11:
         case 0x91:
-            Serial.println(" Chip = DS2501");  // 64 byte
+            Serial.println("DS2501");  // 64 byte
             break;
         case 0x09:
-            Serial.println(" Chip = DS2502");  // 512 byte
+            Serial.println("DS2502");  // 512 byte
             break;
         case 0x13:
-            Serial.println(" Chip = DS2503");  // 512 byte
+            Serial.println("DS2503");  // 512 byte
             break;
-        case 0x28:
-            Serial.println(" Chip = DS2505"); // 2048 byte
+        case 0x0B:
+            Serial.println("DS2505"); // 2048 byte
             break;
-        case 0x22:
-            Serial.println(" Chip = DS2506"); // 8192 byte
+        case 0x0F:
+            Serial.println("DS2506"); // 8192 byte
             break;
         default:
-            Serial.println(" ERROR: not a DS18x20 family device.");
+            Serial.println("not a DS250x");
             return;
     }
 
@@ -94,28 +96,25 @@ void loop()
     oneWire.write_bytes(cmd_read, 3, true);        // Read data command, leave ghost power on
 
     const uint8_t crc_read = oneWire.read();             // DS250x generates a CRC for the command we sent, we assign a read slot and store it's value
-    const uint8_t crc_calc = OneWire::crc8(cmd_read, 3);  // We calculate the CRC of the commands we sent using the library function and store it
 
-    if (crc_calc != crc_read)
-    {      // Then we compare it to the value the ds250x calculated, if it fails, we print debug messages and abort
-        Serial.println("Invalid command CRC!");
-        Serial.print("Calculated CRC:");
-        Serial.println(crc_calc, HEX);    // HEX makes it easier to observe and compare
-        Serial.print("DS250x readback CRC:");
-        Serial.println(crc_read, HEX);
+    if (crc_read != oneWire.crc8(cmd_read, 3))
+    {
+        Serial.println(" - ERROR: CRC not valid!");
         return;                      // Since CRC failed, we abort the rest of the loop and start over
     }
 
-    Serial.println("Data is: ");   // For the printout of the data
-    uint8_t device_data[32];                  // container for the data from device
+    uint8_t device_data[32];             // container for the data from device
+    oneWire.read_bytes(device_data,32); // we store each read byte to a different position in the data array
+
+    Serial.print("  data =");   // For the printout of the data
+
     for (uint8_t index = 0; index < 32; index++)
-    {    // Now it's time to read the PROM data itself, each page is 32 bytes so we need 32 read commands
-        device_data[index] = oneWire.read();         // we store each read byte to a different position in the data array
-        Serial.print(device_data[index], HEX);       // printout in ASCII
+    {
         Serial.print(" ");           // blank space
+        Serial.print(device_data[index], HEX);       // printout
     }
     Serial.println();
-    delay(5000);                    // Delay so we don't saturate the serial output
+    delay(1000);                    // Delay so we don't saturate the serial output
 
 }
 

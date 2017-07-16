@@ -12,7 +12,7 @@
 
 #include <OneWire.h>
 
-OneWire onewire(10); // on pin 10 (a 1k to 4.7K resistor is necessary)
+OneWire oneWire(10); // on pin 10 (a 1k to 4.7K resistor is necessary)
 
 void setup()
 {
@@ -25,14 +25,14 @@ void loop()
     // alternative 1: directly address device (onewire.select()) if you know the ROM
     // alternative 2: if only ONE device is present: issue skip-rom-cmd skip() after reset()
 
-    uint8_t device_rom[8];
-
     delay(50);
 
-    if (!onewire.search(device_rom))
+    uint8_t device_rom[8];
+
+    if (!oneWire.search(device_rom))
     {
         Serial.println("No more addresses.");
-        onewire.reset_search();
+        oneWire.reset_search();
         delay(250);
         return;
     }
@@ -44,11 +44,7 @@ void loop()
         Serial.print(device_rom[index], HEX);
     }
 
-    if (OneWire::crc8(device_rom, 7) == device_rom[7])
-    {
-        Serial.print(" - CRC valid");
-    }
-    else
+    if (device_rom[7] != oneWire.crc8(device_rom, 7))
     {
         Serial.println(" - ERROR: CRC is not valid!");
         return;
@@ -56,37 +52,39 @@ void loop()
 
     // start of device dependent code
 
-    if (device_rom[0] == 0x29)
+    Serial.print(" - Chip = ");
+    switch (device_rom[0])
     {
-        Serial.println(" - Device is a DS2408");
-    }
-    else
-    {
-        Serial.println(" - ERROR: not a DS2408");
-        return;
+        case 0x29:
+            Serial.println("DS2408");
+            break;
+        default:
+            Serial.println("not a DS2408");
+            return;
     }
 
-    const bool device_is_present = onewire.reset();
+    const bool device_is_present = oneWire.reset();
     if (!device_is_present) return;
-    onewire.select(device_rom);
+    oneWire.select(device_rom);
 
     uint8_t device_data[13];  // Put everything in the buffer so we can compute CRC easily.
     device_data[0] = 0xF0;    // Read PIO Registers
     device_data[1] = 0x88;    // LSB address
     device_data[2] = 0x00;    // MSB address
-    onewire.write_bytes(device_data, 3);
-    onewire.read_bytes(device_data + 3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
-    onewire.reset();
+    oneWire.write_bytes(device_data, 3);
+    oneWire.read_bytes(device_data + 3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
+    oneWire.reset();
 
-    Serial.print("  DS2408 data = ");
+    Serial.print("  data =");
     for(uint8_t index = 0; index < 11; index++)
     {
         Serial.print(" ");
         Serial.print(device_data[index], HEX);
     }
 
-    if (!OneWire::check_crc16(device_data, 11, &device_data[11]))
+    if (!oneWire.check_crc16(device_data, 11, &device_data[11]))
     {
-        Serial.print(" - ERROR: CRC failure in data");
+        Serial.print(" - ERROR: CRC not valid");
     }
+    Serial.println();
 }

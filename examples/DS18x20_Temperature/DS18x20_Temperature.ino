@@ -20,6 +20,8 @@ void loop()
     // alternative 1: directly address device (onewire.select()) if you know the ROM
     // alternative 2: if only ONE device is present: issue skip-rom-cmd skip() after reset()
 
+    delay(50);
+
     uint8_t device_rom[8];
 
     if (!oneWire.search(device_rom))
@@ -37,30 +39,32 @@ void loop()
         Serial.print(device_rom[index], HEX);
     }
 
-    if (OneWire::crc8(device_rom, 7) != device_rom[7])
+    if (oneWire.crc8(device_rom, 7) != device_rom[7])
     {
-        Serial.println(" ERROR: CRC is not valid!");
+        Serial.println(" - ERROR: CRC is not valid!");
         return;
     }
 
     /// start of device dependent code
 
     // the first ROM byte indicates which chip
+    Serial.print(" - Chip = ");
     uint8_t device_type = 0; // zero for all but 18S20
+
     switch (device_rom[0])
     {
         case 0x10:
-            Serial.println(" Chip = DS18S20");  // or old DS1820
+            Serial.println("DS18S20");  // or old DS1820
             device_type = 1;
             break;
         case 0x28:
-            Serial.println(" Chip = DS18B20");
+            Serial.println("DS18B20");
             break;
         case 0x22:
-            Serial.println(" Chip = DS1822");
+            Serial.println("DS1822");
             break;
         default:
-            Serial.println(" ERROR: not a DS18x20 family device.");
+            Serial.println("not in DS18x20 family");
             return;
     }
 
@@ -77,20 +81,21 @@ void loop()
     oneWire.select(device_rom);
     oneWire.write(0xBE);         // Read Scratchpad
 
-    Serial.print("  Data = ");
-    Serial.print(device_is_present, HEX);
-    Serial.print(" ");
-
     uint8_t device_data[12];
+    oneWire.read_bytes(device_data,9);
+
+    Serial.print("  Data =");
     for (uint8_t index = 0; index < 9; index++) // we need 9 bytes
     {
-        device_data[index] = oneWire.read();
-        Serial.print(device_data[index], HEX);
         Serial.print(" ");
+        Serial.print(device_data[index], HEX);
     }
-    Serial.print(" CRC=");
-    Serial.print(OneWire::crc8(device_data, 8), HEX);
-    Serial.println();
+
+    if (device_rom[9] != oneWire.crc8(device_data, 8))
+    {
+        Serial.println(" - ERROR: CRC not valid!");
+        return;
+    }
 
     // Convert the device_data to actual temperature
     // because the result is a 16 bit signed integer, it should
