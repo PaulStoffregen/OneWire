@@ -17,12 +17,11 @@
 #endif
 
 // to make the bus more secure you can disable parasitic bus powering
-// and switch to open drain only.
-// NOTE: you need to power the devices yourself, because the PU-resistor
-// might not do it completely
-#ifndef ONEWIRE_OPEN_DRAIN_ONLY
-#define ONEWIRE_OPEN_DRAIN_ONLY 1
-#endif
+// and switch to open drain only, just keep in mind to use the
+// send-routines without power=true
+// NOTE: you need to power the devices yourself, because the external
+// PU-resistor might not do it completely
+
 
 class OneWire
 {
@@ -75,7 +74,7 @@ public:
 
     // Write a bit. The bus is always left powered at the end, see
     // note in write() about that.
-    void write_bit(bool value);
+    void write_bit(bool value, bool power = false);
 
     // Read a bit.
     bool read_bit();

@@ -192,7 +192,7 @@ bool OneWire::reset()
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-void OneWire::write_bit(const bool value)
+void OneWire::write_bit(const bool value, const bool power)
 {
     const uint8_t time_high = uint8_t(value ? 10 : 60);
     const uint8_t time_low  = uint8_t(value ? 55 : 5);
@@ -203,9 +203,7 @@ void OneWire::write_bit(const bool value)
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
     delayMicroseconds(time_high);
-#if ONEWIRE_OPEN_DRAIN_ONLY
-    DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
-#endif
+    if (!power) DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
     DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // drive output high
     interrupts();
     delayMicroseconds(time_low);
@@ -242,34 +240,19 @@ bool OneWire::read_bit()
 //
 void OneWire::write(uint8_t value, const bool power)
 {
-
     for (uint8_t index = 0; index < 8; index++)
     {
-        write_bit((value & 0x01) != 0); // shifting value is faster than clean solution with bitmask (~18 byte on arduino)
+        write_bit((value & 0x01) != 0, power); // shifting value is faster than clean solution with bitmask (~18 byte on arduino)
         value >>= 1;
     }
-
-#if !ONEWIRE_OPEN_DRAIN_ONLY
-    if (!power)
-    {
-        DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-    }
-#endif
 }
 
 void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, const bool power)
 {
     for (uint16_t index = 0; index < data_size; index++) // not slower than solution without index
     {
-        write(data_array[index]);
+        write(data_array[index], power);
     }
-
-#if !ONEWIRE_OPEN_DRAIN_ONLY
-    if (!power)
-    {
-        DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-    }
-#endif
 }
 
 //
@@ -318,9 +301,7 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
-#if !ONEWIRE_OPEN_DRAIN_ONLY
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-#endif
 }
 
 //
