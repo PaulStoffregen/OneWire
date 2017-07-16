@@ -147,7 +147,7 @@ OneWire::OneWire(const uint8_t pin)
     pinMode(pin, INPUT);
     pin_bitMask = PIN_TO_BITMASK(pin);
     pin_baseReg = PIN_TO_BASEREG(pin);
-    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+    DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // on avr: act as pullup in input-mode
 
     reset_search(); // really needed?
 }
@@ -179,6 +179,7 @@ bool OneWire::reset()
     delayMicroseconds(480);
     noInterrupts();
     DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
+    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // on avr: act as pullup in input-mode
     delayMicroseconds(70);
     const bool success = !DIRECT_READ(_baseReg, _bitMask);
     interrupts();
@@ -220,6 +221,7 @@ bool OneWire::read_bit()
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);
     delayMicroseconds(3);
     DIRECT_MODE_INPUT(_baseReg, _bitMask);    // let pin float, pull up will raise
+    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // on avr: act as pullup in input-mode
     delayMicroseconds(10);
     const bool value = DIRECT_READ(_baseReg, _bitMask);
     interrupts();
