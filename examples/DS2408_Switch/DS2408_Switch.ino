@@ -11,10 +11,8 @@
  */
 
 #include <OneWire.h>
-#include "../../src/platform.h"
-#include "../../src/OneWire.h"
 
-OneWire onewire(10);  // on pin 10
+OneWire onewire(10); // on pin 10 (a 4.7K resistor is necessary)
 
 void setup()
 {
@@ -23,11 +21,15 @@ void setup()
 
 void loop()
 {
-    uint8_t device_address[8];
+    /// start general bus search: safer for unknown bus-devices
+    // alternative 1: directly address device (onewire.select()) if you know the ROM
+    // alternative 2: if only ONE device is present: issue skip-rom-cmd skip() after reset()
+
+    uint8_t device_rom[8];
 
     delay(50);
 
-    if (!onewire.search(device_address))
+    if (!onewire.search(device_rom))
     {
         Serial.println("No more addresses.");
         onewire.reset_search();
@@ -39,10 +41,10 @@ void loop()
     for(uint8_t index = 0; index < 8; index++)
     {
         Serial.print(" ");
-        Serial.print(device_address[index], HEX);
+        Serial.print(device_rom[index], HEX);
     }
 
-    if (OneWire::crc8(device_address, 7) == device_address[7])
+    if (OneWire::crc8(device_rom, 7) == device_rom[7])
     {
         Serial.print(" - CRC valid");
     }
@@ -54,7 +56,7 @@ void loop()
 
     // start of device dependent code
 
-    if (device_address[0] == 0x29)
+    if (device_rom[0] == 0x29)
     {
         Serial.println(" - Device is a DS2408");
     }
@@ -65,7 +67,8 @@ void loop()
     }
 
     const bool device_is_present = onewire.reset();
-    onewire.select(device_address);
+    if (!device_is_present) return;
+    onewire.select(device_rom);
 
     uint8_t device_data[13];  // Put everything in the buffer so we can compute CRC easily.
     device_data[0] = 0xF0;    // Read PIO Registers

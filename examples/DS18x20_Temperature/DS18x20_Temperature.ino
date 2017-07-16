@@ -16,9 +16,13 @@ void setup()
 
 void loop()
 {
-    uint8_t device_address[8];
+    /// start general bus search: safer for unknown bus-devices
+    // alternative 1: directly address device (onewire.select()) if you know the ROM
+    // alternative 2: if only ONE device is present: issue skip-rom-cmd skip() after reset()
 
-    if (!oneWire.search(device_address))
+    uint8_t device_rom[8];
+
+    if (!oneWire.search(device_rom))
     {
         Serial.println("No more addresses.");
         oneWire.reset_search();
@@ -30,20 +34,20 @@ void loop()
     for (uint8_t index = 0; index < 8; index++)
     {
         Serial.print(" ");
-        Serial.print(device_address[index], HEX);
+        Serial.print(device_rom[index], HEX);
     }
 
-    if (OneWire::crc8(device_address, 7) != device_address[7])
+    if (OneWire::crc8(device_rom, 7) != device_rom[7])
     {
         Serial.println(" ERROR: CRC is not valid!");
         return;
     }
 
-    // start of device dependent code
+    /// start of device dependent code
 
     // the first ROM byte indicates which chip
     uint8_t device_type = 0; // zero for all but 18S20
-    switch (device_address[0])
+    switch (device_rom[0])
     {
         case 0x10:
             Serial.println(" Chip = DS18S20");  // or old DS1820
@@ -60,15 +64,17 @@ void loop()
             return;
     }
 
-    oneWire.reset();
-    oneWire.select(device_address);
+    bool device_is_present = oneWire.reset();
+    if (!device_is_present) return;
+    oneWire.select(device_rom);
     oneWire.write(0x44, 1);        // start conversion, with parasite power on at the end
 
     delay(1000);     // maybe 750ms is enough, maybe not
     // we might do a oneWire.depower() here, but the reset will take care of it.
 
-    const bool device_is_present = oneWire.reset();
-    oneWire.select(device_address);
+    device_is_present = oneWire.reset();
+    if (!device_is_present) return;
+    oneWire.select(device_rom);
     oneWire.write(0xBE);         // Read Scratchpad
 
     Serial.print("  Data = ");
