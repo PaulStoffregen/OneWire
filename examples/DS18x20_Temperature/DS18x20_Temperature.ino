@@ -91,11 +91,12 @@ void loop()
         Serial.print(device_data[index], HEX);
     }
 
-    if (device_rom[9] != oneWire.crc8(device_data, 8))
+    if (device_data[8] != oneWire.crc8(device_data, 8))
     {
         Serial.println(" - ERROR: CRC not valid!");
         return;
     }
+    Serial.println();
 
     // Convert the device_data to actual temperature
     // because the result is a 16 bit signed integer, it should

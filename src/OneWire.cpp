@@ -167,6 +167,7 @@ bool OneWire::reset()
     uint8_t retries = 125;
 
     DIRECT_MODE_INPUT(_baseReg, _bitMask);
+    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // on avr: act as pullup in input-mode
     // wait until the wire is high... just in case
     do
     {
