@@ -163,9 +163,7 @@ bool OneWire::reset()
 {
     uint8_t retries = 125;
 
-    noInterrupts();
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-    interrupts();
     // wait until the wire is high... just in case
     do
     {
@@ -173,10 +171,8 @@ bool OneWire::reset()
         delayMicroseconds(2);
     } while (!DIRECT_READ(pin_baseReg, pin_bitMask));
 
-    noInterrupts();
     DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
     DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
-    interrupts();
     delayMicroseconds(480);
     noInterrupts();
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);    // allow it to float
@@ -193,26 +189,13 @@ bool OneWire::reset()
 //
 void OneWire::write_bit(const bool value)
 {
-    if (value)
-    {
         noInterrupts();
         DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
         DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
-        delayMicroseconds(10);
+        delayMicroseconds(value ? 10 : 60);
         DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
         interrupts();
-        delayMicroseconds(55);
-    }
-    else
-    {
-        noInterrupts();
-        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-        DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
-        delayMicroseconds(65);
-        DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
-        interrupts();
-        delayMicroseconds(5);
-    }
+        delayMicroseconds(value ? 55 : 5);
 }
 
 //
@@ -222,8 +205,8 @@ void OneWire::write_bit(const bool value)
 bool OneWire::read_bit()
 {
     noInterrupts();
-    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);
     DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);
     delayMicroseconds(3);
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);    // let pin float, pull up will raise
     delayMicroseconds(10);
@@ -251,10 +234,7 @@ void OneWire::write(uint8_t value, const bool power)
 
     if (!power)
     {
-        noInterrupts();
         DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-        interrupts();
     }
 }
 
@@ -267,10 +247,7 @@ void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, 
 
     if (!power)
     {
-        noInterrupts();
         DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-        interrupts();
     }
 }
 
@@ -320,9 +297,7 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
-    noInterrupts();
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
-    interrupts();
 }
 
 //
