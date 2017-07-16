@@ -189,13 +189,16 @@ bool OneWire::reset()
 //
 void OneWire::write_bit(const bool value)
 {
-        noInterrupts();
-        DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
-        DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
-        delayMicroseconds(value ? 10 : 60);
-        DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
-        interrupts();
-        delayMicroseconds(value ? 55 : 5);
+    const uint8_t time_high = (value ? 10 : 60);
+    const uint8_t time_low  = (value ? 55 : 5);
+
+    noInterrupts();
+    DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
+    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+    delayMicroseconds(time_high);
+    DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
+    interrupts();
+    delayMicroseconds(time_low);
 }
 
 //
@@ -467,12 +470,10 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
         search_last_device_flag = false;
         search_last_family_discrepancy = 0;
         search_result = false;
-    } else
+    }
+    else
     {
-        for (int index = 0; index < 8; index++)
-        {
-            new_rom_array[index] = search_rom_array[index];
-        }
+        memcpy(new_rom_array, search_rom_array, 8);
     }
     return search_result;
 }
