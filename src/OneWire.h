@@ -16,6 +16,14 @@
 #define ONEWIRE_CRC8_TABLE 1
 #endif
 
+// to make the bus more secure you can disable parasitic bus powering
+// and switch to open drain only.
+// NOTE: you need to power the devices yourself, because the PU-resistor
+// might not do it completely
+#ifndef ONEWIRE_OPEN_DRAIN_ONLY
+#define ONEWIRE_OPEN_DRAIN_ONLY 1
+#endif
+
 class OneWire
 {
 private:

@@ -203,6 +203,9 @@ void OneWire::write_bit(const bool value)
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
     delayMicroseconds(time_high);
+#if ONEWIRE_OPEN_DRAIN_ONLY
+    DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
+#endif
     DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // drive output high
     interrupts();
     delayMicroseconds(time_low);
@@ -246,10 +249,12 @@ void OneWire::write(uint8_t value, const bool power)
         value >>= 1;
     }
 
+#if !ONEWIRE_OPEN_DRAIN_ONLY
     if (!power)
     {
         DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
     }
+#endif
 }
 
 void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, const bool power)
@@ -259,10 +264,12 @@ void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, 
         write(data_array[index]);
     }
 
+#if !ONEWIRE_OPEN_DRAIN_ONLY
     if (!power)
     {
         DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
     }
+#endif
 }
 
 //
@@ -311,7 +318,9 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
+#if !ONEWIRE_OPEN_DRAIN_ONLY
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
+#endif
 }
 
 //
