@@ -1,5 +1,3 @@
-#include <OneWire.h>
-
 /*
  * DS2408 8-Channel Addressable Switch
  *
@@ -9,69 +7,83 @@
  *   - Unlike most input/output ports, the DS2408 doesn't have mode bits to
  *       set whether the pins are input or output.  If you issue a read command,
  *       they're inputs.  If you write to them, they're outputs.
- *   - For reading from a switch, you should use 10K pull-up resisters.
+ *   - For reading from a switch, you should use 10K pull-up resistors.
  */
 
-void PrintBytes(uint8_t* addr, uint8_t count, bool newline=0) {
-  for (uint8_t i = 0; i < count; i++) {
-    Serial.print(addr[i]>>4, HEX);
-    Serial.print(addr[i]&0x0f, HEX);
-  }
-  if (newline)
-    Serial.println();
+#include <OneWire.h>
+#include "../../src/platform.h"
+#include "../../src/OneWire.h"
+
+OneWire onewire(10);  // on pin 10
+
+void setup()
+{
+    Serial.begin(115200);
 }
 
-void ReadAndReport(OneWire* net, uint8_t* addr) {
-  Serial.print("  Reading DS2408 ");
-  PrintBytes(addr, 8);
-  Serial.println();
-	
-  uint8_t buf[13];  // Put everything in the buffer so we can compute CRC easily.
-  buf[0] = 0xF0;    // Read PIO Registers
-  buf[1] = 0x88;    // LSB address
-  buf[2] = 0x00;    // MSB address
-  net->write_bytes(buf, 3);
-  net->read_bytes(buf+3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
-  net->reset();
+void loop()
+{
+    uint8_t device_address[8];
 
-  if (!OneWire::check_crc16(buf, 11, &buf[11])) {
-    Serial.print("CRC failure in DS2408 at ");
-    PrintBytes(addr, 8, true);
-    return;
-  }
-  Serial.print("  DS2408 data = ");
-  // First 3 bytes contain command, register address.
-  Serial.println(buf[3], BIN);
-}
+    delay(50);
 
-OneWire net(10);  // on pin 10
+    if (!onewire.search(device_address))
+    {
+        Serial.println("No more addresses.");
+        onewire.reset_search();
+        delay(250);
+        return;
+    }
 
-void setup(void) {
-  Serial.begin(9600);
-}
+    Serial.print("ROM =");
+    for(uint8_t index = 0; index < 8; index++)
+    {
+        Serial.print(" ");
+        Serial.print(device_address[index], HEX);
+    }
 
-void loop(void) {
-  byte i;
-  byte present = 0;
-  byte addr[8];
-  
-  if (!net.search(addr)) {
-    Serial.print("No more addresses.\n");
-    net.reset_search();
-    delay(1000);
-    return;
-  }
-  
-  if (OneWire::crc8(addr, 7) != addr[7]) {
-    Serial.print("CRC is not valid!\n");
-    return;
-  }
-  
-  if (addr[0] != 0x29) {
-    PrintBytes(addr, 8);
-    Serial.print(" is not a DS2408.\n");
-    return;
-  }
+    if (OneWire::crc8(device_address, 7) == device_address[7])
+    {
+        Serial.print(" - CRC valid");
+    }
+    else
+    {
+        Serial.println(" - ERROR: CRC is not valid!");
+        return;
+    }
 
-  ReadAndReport(&net, addr);
+    // start of device dependent code
+
+    if (device_address[0] == 0x29)
+    {
+        Serial.println(" - Device is a DS2408");
+    }
+    else
+    {
+        Serial.println(" - ERROR: not a DS2408");
+        return;
+    }
+
+    const bool device_is_present = onewire.reset();
+    onewire.select(device_address);
+
+    uint8_t device_data[13];  // Put everything in the buffer so we can compute CRC easily.
+    device_data[0] = 0xF0;    // Read PIO Registers
+    device_data[1] = 0x88;    // LSB address
+    device_data[2] = 0x00;    // MSB address
+    onewire.write_bytes(device_data, 3);
+    onewire.read_bytes(device_data + 3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
+    onewire.reset();
+
+    Serial.print("  DS2408 data = ");
+    for(uint8_t index = 0; index < 11; index++)
+    {
+        Serial.print(" ");
+        Serial.print(device_data[index], HEX);
+    }
+
+    if (!OneWire::check_crc16(device_data, 11, &device_data[11]))
+    {
+        Serial.print(" - ERROR: CRC failure in data");
+    }
 }
