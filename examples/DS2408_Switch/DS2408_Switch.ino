@@ -12,7 +12,7 @@
 
 #include <OneWire.h>
 
-OneWire onewire(10); // on pin 10 (a 4.7K resistor is necessary)
+OneWire onewire(10); // on pin 10 (a 1k to 4.7K resistor is necessary)
 
 void setup()
 {

@@ -24,7 +24,7 @@ DS250x add-only programmable memory reader w/SKIP ROM.
 
 #include <OneWire.h>
 
-OneWire oneWire(10);  // on pin 10 (a 4.7K resistor is necessary)
+OneWire oneWire(10);  // on pin 10 (a 1k to 4.7K resistor is necessary)
 
 void setup()
 {
