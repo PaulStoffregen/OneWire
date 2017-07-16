@@ -202,7 +202,8 @@ void OneWire::write_bit(const bool value)
         DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
         interrupts();
         delayMicroseconds(55);
-    } else
+    }
+    else
     {
         noInterrupts();
         DIRECT_WRITE_LOW(pin_baseReg, pin_bitMask);
@@ -239,13 +240,15 @@ bool OneWire::read_bit()
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-void OneWire::write(const uint8_t value, const bool power)
+void OneWire::write(uint8_t value, const bool power)
 {
 
-    for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
+    for (uint8_t index = 0; index < 8; index++)
     {
-        write_bit((bitMask & value) != 0); // TODO: shifting value could be me faster
+        write_bit((value & 0x01) != 0); // shifting value is faster than clean solution with bitmask (~18 byte on arduino)
+        value >>= 1;
     }
+
     if (!power)
     {
         noInterrupts();
@@ -255,11 +258,11 @@ void OneWire::write(const uint8_t value, const bool power)
     }
 }
 
-void OneWire::write_bytes(const uint8_t *buf, const uint16_t data_size, const bool power)
+void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, const bool power)
 {
-    for (uint16_t index = 0; index < data_size; index++) // TODO: can be tuned
+    for (uint16_t index = 0; index < data_size; index++) // not slower than solution without index
     {
-        write(buf[index]);
+        write(data_array[index]);
     }
 
     if (!power)
@@ -285,17 +288,11 @@ uint8_t OneWire::read()
     return value;
 }
 
-void OneWire::read_bytes(uint8_t data_array[], uint16_t data_size)
+void OneWire::read_bytes(uint8_t data_array[], const uint16_t data_size)
 {
-    for (uint16_t index = 0; index < data_size; index++)
-    //  while (data_size-- > 0)
+    for (uint16_t index = 0; index < data_size; index++) // not slower than solution without index
     {
         data_array[index] = read();
-
-        //*data_array = read(); // TODO: test if it can be combined in one line
-
-        //*data_array = read(); // TODO: test if it can be combined in one line
-        //data_array++;
     }
 }
 
@@ -400,7 +397,8 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
         if (search_mode)
         {
             write(0xF0);   // NORMAL SEARCH
-        } else
+        }
+        else
         {
             write(0xEC);   // CONDITIONAL SEARCH
         }
