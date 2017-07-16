@@ -23,7 +23,7 @@ DS250x add-only programmable memory reader w/SKIP ROM.
  */
 
 #include <OneWire.h>
-OneWire ds(6);                    // OneWire bus on digital pin 6
+OneWire oneWire(6);                    // OneWire bus on digital pin 6
 void setup() {
   Serial.begin (9600);
 }
@@ -37,16 +37,16 @@ void loop() {
   byte ccrc;                      // Variable to store the command CRC
   byte ccrc_calc;
 
-  present = ds.reset();           // OneWire bus reset, always needed to start operation on the bus, returns a 1/TRUE if there's a device present.
-  ds.skip();                      // Skip ROM search
+  present = oneWire.reset();           // OneWire bus reset, always needed to start operation on the bus, returns a 1/TRUE if there's a device present.
+  oneWire.skip();                      // Skip ROM search
 
   if (present == TRUE){           // We only try to read the data if there's a device present 
     Serial.println("DS250x device present");
-    ds.write(leemem[0],1);        // Read data command, leave ghost power on
-    ds.write(leemem[1],1);        // LSB starting address, leave ghost power on
-    ds.write(leemem[2],1);        // MSB starting address, leave ghost power on
+    oneWire.write(leemem[0],1);        // Read data command, leave ghost power on
+    oneWire.write(leemem[1],1);        // LSB starting address, leave ghost power on
+    oneWire.write(leemem[2],1);        // MSB starting address, leave ghost power on
 
-    ccrc = ds.read();             // DS250x generates a CRC for the command we sent, we assign a read slot and store it's value
+    ccrc = oneWire.read();             // DS250x generates a CRC for the command we sent, we assign a read slot and store it's value
     ccrc_calc = OneWire::crc8(leemem, 3);  // We calculate the CRC of the commands we sent using the library function and store it
 
     if ( ccrc_calc != ccrc) {      // Then we compare it to the value the ds250x calculated, if it fails, we print debug messages and abort
@@ -59,7 +59,7 @@ void loop() {
     }
     Serial.println("Data is: ");   // For the printout of the data 
     for ( i = 0; i < 32; i++) {    // Now it's time to read the PROM data itself, each page is 32 bytes so we need 32 read commands
-      data[i] = ds.read();         // we store each read byte to a different position in the data array 
+      data[i] = oneWire.read();         // we store each read byte to a different position in the data array
       Serial.print(data[i]);       // printout in ASCII
       Serial.print(" ");           // blank space 
     }
