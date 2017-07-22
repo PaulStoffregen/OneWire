@@ -147,7 +147,10 @@ OneWire::OneWire(const uint8_t pin)
     pinMode(pin, INPUT);
     pin_bitMask = PIN_TO_BITMASK(pin);
     pin_baseReg = PIN_TO_BASEREG(pin);
-    DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // on avr: act as pullup in input-mode
+
+#if ONEWIRE_USE_PULL_UP
+    DIRECT_ACTIVATE_PU(pin_baseReg, pin_bitMask);
+#endif
 
     reset_search(); // really needed?
 }
@@ -167,7 +170,7 @@ bool OneWire::reset()
     uint8_t retries = 125;
 
     DIRECT_MODE_INPUT(_baseReg, _bitMask);
-    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // on avr: act as pullup in input-mode
+
     // wait until the wire is high... just in case
     do
     {
@@ -178,13 +181,16 @@ bool OneWire::reset()
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
     delayMicroseconds(480);
+
     noInterrupts();
     DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
-    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // on avr: act as pullup in input-mode
+
     delayMicroseconds(70);
     const bool success = !DIRECT_READ(_baseReg, _bitMask);
     interrupts();
     delayMicroseconds(410);
+
+    // TODO: after presence detection we could power the hub if wanted
     return success;
 }
 
@@ -223,7 +229,6 @@ bool OneWire::read_bit()
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);
     delayMicroseconds(3);
     DIRECT_MODE_INPUT(_baseReg, _bitMask);    // let pin float, pull up will raise
-    DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // on avr: act as pullup in input-mode
     delayMicroseconds(10);
     const bool value = DIRECT_READ(_baseReg, _bitMask);
     interrupts();
@@ -485,7 +490,7 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
 // "Understanding and Using Cyclic Redundancy Checks with Maxim iButton Products"
 //
 
-#if ONEWIRE_CRC8_TABLE
+#if ONEWIRE_USE_CRC8_TABLE
 // This table comes from Dallas sample code where it is freely reusable,
 // though Copyright (C) 2000 Dallas Semiconductor Corporation
 static const uint8_t PROGMEM crc_table[] = {

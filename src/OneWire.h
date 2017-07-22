@@ -12,15 +12,18 @@
 // about 250 bytes.  It does NOT consume RAM (but did in very
 // old versions of OneWire).  If you disable this, a slower
 // but very compact algorithm is used.
-#ifndef ONEWIRE_CRC8_TABLE
-#define ONEWIRE_CRC8_TABLE 1
-#endif
+#define ONEWIRE_USE_CRC8_TABLE 1
 
 // to make the bus more secure you can disable parasitic bus powering
 // and switch to open drain only, just keep in mind to use the
 // send-routines without power=true
 // NOTE: you need to power the devices yourself, because the external
 // PU-resistor might not do it completely
+// TODO
+
+// use micro controller feature to use internal pull-ups
+// NOTE: will throw compiler-error if feature is not yet implemented for your controller
+#define ONEWIRE_USE_PULL_UP  0
 
 
 class OneWire
