@@ -14,17 +14,15 @@
 // but very compact algorithm is used.
 #define ONEWIRE_USE_CRC8_TABLE 1
 
+// micro controller feature to use internal pull-ups
+// NOTE: will throw compiler-error if feature is not yet implemented or tested for your controller
+#define ONEWIRE_USE_PULL_UP  0
+
 // to make the bus more secure you can disable parasitic bus powering
 // and switch to open drain only, just keep in mind to use the
 // send-routines without power=true
 // NOTE: you need to power the devices yourself, because the external
 // PU-resistor might not do it completely
-// TODO
-
-// use micro controller feature to use internal pull-ups
-// NOTE: will throw compiler-error if feature is not yet implemented for your controller
-#define ONEWIRE_USE_PULL_UP  0
-
 
 class OneWire
 {
@@ -49,7 +47,7 @@ public:
     OneWire &operator=(OneWire &ow) = delete;        // disallow copy assignment
     OneWire &operator=(const OneWire &ow) = delete;  // disallow copy assignment
 
-#if (ONEWIRE_GCC_VERSION > 40900)
+#if (ONEWIRE_GCC_VERSION > 40900) // is needed because of old tool chain for arduino primo
     OneWire(OneWire &&ow) = default;               // default move constructor
     OneWire &operator=(OneWire &&ow) = delete;       // disallow move assignment
 #endif
@@ -84,6 +82,11 @@ public:
 
     // Read a bit.
     bool read_bit();
+
+    // activate parasitic bus powering by master
+    // write_bytes() , write() and write_bit() have these features already build in,
+    // but reset() and read() do not --> use this after issuing
+    void power();
 
     // Stop forcing power onto the bus. You only need to do this if
     // you used the 'power' flag to write() or used a write_bit() call

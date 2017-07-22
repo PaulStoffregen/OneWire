@@ -32,57 +32,6 @@ private email about OneWire).
 OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
-Version 2.3:
-  Unknown chip fallback mode, Roger Clark
-  Teensy-LC compatibility, Paul Stoffregen
-  Search bug fix, Love Nystrom
-
-Version 2.2:
-  Teensy 3.0 compatibility, Paul Stoffregen, paul@pjrc.com
-  Arduino Due compatibility, http://arduino.cc/forum/index.php?topic=141030
-  Fix DS18B20 example negative temperature
-  Fix DS18B20 example's low res modes, Ken Butcher
-  Improve reset timing, Mark Tillotson
-  Add const qualifiers, Bertrik Sikken
-  Add initial value input to crc16, Bertrik Sikken
-  Add target_search() function, Scott Roberts
-
-Version 2.1:
-  Arduino 1.0 compatibility, Paul Stoffregen
-  Improve temperature example, Paul Stoffregen
-  DS250x_PROM example, Guillermo Lovato
-  PIC32 (chipKit) compatibility, Jason Dangel, dangel.jason AT gmail.com
-  Improvements from Glenn Trewitt:
-  - crc16() now works
-  - check_crc16() does all of calculation/checking work.
-  - Added read_bytes() and write_bytes(), to reduce tedious loops.
-  - Added ds2408 example.
-  Delete very old, out-of-date readme file (info is here)
-
-Version 2.0: Modifications by Paul Stoffregen, January 2010:
-http://www.pjrc.com/teensy/td_libs_OneWire.html
-  Search fix from Robin James
-    http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1238032295/27#27
-  Use direct optimized I/O in all cases
-  Disable interrupts during timing critical sections
-    (this solves many random communication errors)
-  Disable interrupts during read-modify-write I/O
-  Reduce RAM consumption by eliminating unnecessary
-    variables and trimming many to 8 bits
-  Optimize both crc8 - table version moved to flash
-
-Modified to work with larger numbers of devices - avoids loop.
-Tested in Arduino 11 alpha with 12 sensors.
-26 Sept 2008 -- Robin James
-http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1238032295/27#27
-
-Updated to work with arduino-0008 and to include skip() as of
-2007/07/06. --RJL20
-
-Modified to calculate the 8-bit CRC directly, avoiding the need for
-the 256-byte lookup table to be loaded in RAM.  Tested in arduino-0010
--- Tom Pollard, Jan 23, 2008
-
 Jim Studt's original library was modified by Josh Larios.
 
 Tom Pollard, pollard@alum.mit.edu, contributed around May 20, 2008
@@ -304,6 +253,12 @@ void OneWire::select(const uint8_t rom_array[8])
 void OneWire::skip()
 {
     write(0xCC);           // Skip ROM
+}
+
+void OneWire::power()
+{
+    DIRECT_MODE_OUTPUT(pin_baseReg, pin_bitMask);    // drive output low
+    DIRECT_WRITE_HIGH(pin_baseReg, pin_bitMask);    // drive output high
 }
 
 void OneWire::depower()
