@@ -56,15 +56,15 @@ OneWire Master Library
 ### Plans for the future
 
 - update the interface, NOTE: these changes can be made without breaking old code, just use "deprecated" on old interface 
-  - use overloaded functions read and write_bytes(), write(), write_bit() become just write()
   - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
   - predefine standard onewire commands and use send(), skip() is not needed then
-- another hardware abstraction to allow proper esp-use
+- delay() hardware abstraction to allow proper esp-use
 - unit tests
 - CI
 
 ### Development history
 Version 3.0
+- overload write() to replace write_bytes() and read() to replace read_byte()
 - update documentation, doxygen style
 - allow to use internal pull-up if micro controller has support for it -> most µC support INPUT_PULLUP in combination with pinMode(), others will get an errormessage if feature is enabled but not supported / tested
 - clean up compiler-switches

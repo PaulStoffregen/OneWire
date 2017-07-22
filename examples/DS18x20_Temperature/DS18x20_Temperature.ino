@@ -82,7 +82,7 @@ void loop()
     oneWire.write(0xBE);         // Read Scratchpad
 
     uint8_t device_data[12];
-    oneWire.read_bytes(device_data,9);
+    oneWire.read(device_data,9);
 
     Serial.print("  Data =");
     for (uint8_t index = 0; index < 9; index++) // we need 9 bytes

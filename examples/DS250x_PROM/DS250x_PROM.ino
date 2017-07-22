@@ -93,7 +93,7 @@ void loop()
 
     // array with the commands to initiate a read, DS250x devices expect 3 bytes to start a read: command,LSB&MSB addresses
     uint8_t cmd_read[3] = { 0xF0, 0x00, 0x00 };  // 0xF0 is the Read Data command, followed by 00h 00h as starting address(the beginning, 0000h)
-    oneWire.write_bytes(cmd_read, 3, true);        // Read data command, leave ghost power on
+    oneWire.write(cmd_read, 3, true);        // Read data command, leave ghost power on
 
     const uint8_t crc_read = oneWire.read();             // DS250x generates a CRC for the command we sent, we assign a read slot and store it's value
 
@@ -104,7 +104,7 @@ void loop()
     }
 
     uint8_t device_data[32];             // container for the data from device
-    oneWire.read_bytes(device_data,32); // we store each read byte to a different position in the data array
+    oneWire.read(device_data,32); // we store each read byte to a different position in the data array
 
     Serial.print("  data =");   // For the printout of the data
 

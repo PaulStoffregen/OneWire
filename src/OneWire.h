@@ -24,6 +24,9 @@
 // NOTE: you need to power the devices yourself, because the external
 // PU-resistor might not do it completely
 
+
+
+
 class OneWire {
 private:
 
@@ -37,6 +40,18 @@ private:
     bool search_last_device_flag;
 
 public:
+
+    /// ONEWIRE COMMANDS
+    static const uint8_t   CMD_SEARCH_ROM              { 0xF0 };
+    static const uint8_t   CMD_CONDITIONAL_SEARCH      { 0xEC };
+    static const uint8_t   CMD_SKIP_ROM                { 0xCC };
+    static const uint8_t   CMD_SKIP_ROM_OVERDRIVE      { 0x3C };
+    static const uint8_t   CMD_MATCH_ROM               { 0x55 };
+    static const uint8_t   CMD_MATCH_ROM_OVERDRIVE     { 0x69 };
+    static const uint8_t   CMD_READ_ROM                { 0x0F };
+    static const uint8_t   CMD_READ_ROM_OLD            { 0x33 };
+    static const uint8_t   CMD_ALARM_SEARCH            { 0xEC };
+    static const uint8_t   CMD_RESUME                  { 0xA5 };
 
     /// constructor for the bus master
     ///
@@ -95,7 +110,11 @@ public:
     /// \param power        true = the wire is held high at the end for parasitically powered devices.
     ///                         You are responsible for eventually depowering it by calling depower() or doing another read or write.
     ///                     false = high impedance mode after writing
-    void write_bytes(const uint8_t data_array[], uint16_t data_size, bool power = false);
+    void write(const uint8_t data_array[], uint16_t data_size, bool power = false);
+
+    /// deprecated "got replaced by overloaded version of write(), will be deleted in future version"
+    void write_bytes(const uint8_t data_array[], uint16_t data_size, bool power = false)
+    {   write(data_array, data_size, power); };
 
     /// Read a bit.
     ///
@@ -111,7 +130,11 @@ public:
     ///
     /// \param data_array   pointer to array
     /// \param data_size    size of array
-    void read_bytes(uint8_t data_array[], uint16_t data_size);
+    void read(uint8_t data_array[], uint16_t data_size);
+
+    /// deprecated "got replaced by overloaded version of read(), will be deleted in future version"
+    void read_bytes(uint8_t data_array[], uint16_t data_size)
+    {   read(data_array, data_size); };
 
     /// activate parasitic bus powering by master
     /// - write_bytes() , write() and write_bit() have these features already build in,

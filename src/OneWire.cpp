@@ -182,7 +182,7 @@ void OneWire::write(uint8_t value, const bool power)
     }
 }
 
-void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, const bool power)
+void OneWire::write(const uint8_t data_array[], const uint16_t data_size, const bool power)
 {
     for (uint16_t index = 0; index<data_size; index++) // not slower than solution without index
     {
@@ -201,7 +201,7 @@ uint8_t OneWire::read()
     return value;
 }
 
-void OneWire::read_bytes(uint8_t data_array[], const uint16_t data_size)
+void OneWire::read(uint8_t data_array[], const uint16_t data_size)
 {
     for (uint16_t index = 0; index<data_size; index++) // not slower than solution without index
     {
@@ -211,7 +211,7 @@ void OneWire::read_bytes(uint8_t data_array[], const uint16_t data_size)
 
 void OneWire::select(const uint8_t rom_array[8])
 {
-    write(0x55);           // Choose ROM
+    write(CMD_MATCH_ROM);           // Choose ROM
 
     uint8_t rom_size = 8; // clean solution with for(index) seems to be 6 byte larger
     while (rom_size-->0)
@@ -222,7 +222,7 @@ void OneWire::select(const uint8_t rom_array[8])
 
 void OneWire::skip()
 {
-    write(0xCC);           // Skip ROM
+    write(CMD_SKIP_ROM);           // Skip ROM
 }
 
 void OneWire::power()
@@ -282,11 +282,11 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
         // issue the search command
         if (search_mode)
         {
-            write(0xF0);   // NORMAL SEARCH
+            write(CMD_SEARCH_ROM);   // NORMAL SEARCH
         }
         else
         {
-            write(0xEC);   // CONDITIONAL SEARCH
+            write(CMD_CONDITIONAL_SEARCH);   // CONDITIONAL SEARCH
         }
 
         // loop to do the search

@@ -71,8 +71,8 @@ void loop()
     device_data[0] = 0xF0;    // Read PIO Registers
     device_data[1] = 0x88;    // LSB address
     device_data[2] = 0x00;    // MSB address
-    oneWire.write_bytes(device_data, 3);
-    oneWire.read_bytes(device_data + 3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
+    oneWire.write(device_data, 3);
+    oneWire.read(device_data + 3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
     oneWire.reset();
 
     Serial.print("  data =");
