@@ -29,9 +29,9 @@ OneWire Master Library
    - generic ESP8266 (esp8266)
 
 ### How to use
-- understanding [onewire protocol](https://en.wikipedia.org/wiki/1-Wire) help a lot
+- understanding [onewire protocol](https://en.wikipedia.org/wiki/1-Wire) helps a lot during "how to"
 - connect your microcontroller (onewire-master) with the onewire-bus
-- the onewire-bus should be set up as described below
+   - the onewire-bus should be set up as described in separate section below
 - the examples are mostly self explanatory
    - the microcontroller acts as a master
    - it will search and select devices on the bus
@@ -58,12 +58,14 @@ OneWire Master Library
 - update the interface, NOTE: these changes can be made without breaking old code, just use "deprecated" on old interface 
   - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
   - predefine standard onewire commands and use send(), skip() is not needed then
-- delay() hardware abstraction to allow proper esp-use
 - unit tests
 - CI
+- maybe add stm32 support: https://github.com/arduino-org/arduino-core-stm32f4
 
 ### Development history
 Version 3.0
+- delayMicroseconds() hardware abstraction to allow proper nRF51-use (redbear messed up the delaymicroseconds()-implementation)
+   - will be removed as soon redbear fixes its code
 - overload write() to replace write_bytes() and read() to replace read_byte()
 - update documentation, doxygen style
 - allow to use internal pull-up if micro controller has support for it -> most µC support INPUT_PULLUP in combination with pinMode(), others will get an errormessage if feature is enabled but not supported / tested

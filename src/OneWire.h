@@ -52,6 +52,7 @@ public:
     static const uint8_t   CMD_READ_ROM_OLD            { 0x33 };
     static const uint8_t   CMD_ALARM_SEARCH            { 0xEC };
     static const uint8_t   CMD_RESUME                  { 0xA5 };
+    // TODO: should be constexpr, but NRF5x (redbear, ardu primo) have old toolchain
 
     /// constructor for the bus master
     ///
@@ -65,7 +66,7 @@ public:
     OneWire& operator=(OneWire& ow) = delete;        // disallow copy assignment
     OneWire& operator=(const OneWire& ow) = delete;  // disallow copy assignment
 
-#if (ONEWIRE_GCC_VERSION>40900) // is needed because of an old tool chain for arduino primo
+#if (ONEWIRE_GCC_VERSION>40900) // is needed because of an old tool chain for nrf5x
     OneWire(OneWire&& ow) = default;               // default move constructor
     OneWire& operator=(OneWire&& ow) = delete;       // disallow move assignment
 #endif

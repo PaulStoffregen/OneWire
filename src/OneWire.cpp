@@ -119,21 +119,21 @@ bool OneWire::reset()
     do
     {
         if (--retries==0) return false;
-        delayMicroseconds(2);
+        DELAY_MICROSECONDS(2);
     }
     while (!DIRECT_READ(_baseReg, _bitMask));
 
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
-    delayMicroseconds(480);
+    DELAY_MICROSECONDS(480);
 
     noInterrupts();
     DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
 
-    delayMicroseconds(70);
+    DELAY_MICROSECONDS(70);
     const bool success = !DIRECT_READ(_baseReg, _bitMask);
     interrupts();
-    delayMicroseconds(410);
+    DELAY_MICROSECONDS(410);
 
     // TODO: after presence detection we could power the hub if wanted
     return success;
@@ -149,11 +149,11 @@ void OneWire::write_bit(const bool value, const bool power)
     noInterrupts();
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
-    delayMicroseconds(time_high);
+    DELAY_MICROSECONDS(time_high);
     if (!power) DIRECT_MODE_INPUT(_baseReg, _bitMask);    // allow it to float
     DIRECT_WRITE_HIGH(_baseReg, _bitMask);    // drive output high
     interrupts();
-    delayMicroseconds(time_low);
+    DELAY_MICROSECONDS(time_low);
 }
 
 bool OneWire::read_bit()
@@ -164,12 +164,12 @@ bool OneWire::read_bit()
     noInterrupts();
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);
-    delayMicroseconds(3);
+    DELAY_MICROSECONDS(3);
     DIRECT_MODE_INPUT(_baseReg, _bitMask);    // let pin float, pull up will raise
-    delayMicroseconds(10);
+    DELAY_MICROSECONDS(10);
     const bool value = DIRECT_READ(_baseReg, _bitMask);
     interrupts();
-    delayMicroseconds(53);
+    DELAY_MICROSECONDS(53);
     return value;
 }
 

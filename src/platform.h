@@ -29,6 +29,7 @@
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__) /* teensy 3.2 to 3.6 */
@@ -39,6 +40,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+640) = 1)
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+256) = 1)
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+128) = 1)
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__MKL26Z64__) /* teensy LC */
@@ -49,9 +51,11 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+20) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+8) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__) /* arduino due */
+// https://github.com/arduino/ArduinoCore-sam
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
 // http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
 // If you have trouble with OneWire on Arduino Due, please check the
@@ -63,6 +67,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+4)) = (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+13)) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+12)) = (mask))
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 #ifndef PROGMEM
 #define PROGMEM
 #endif
@@ -72,6 +77,8 @@ using io_reg_t = uint8_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__PIC32MX__)
+// https://github.com/chipKIT32/chipKIT-core
+
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         (((*(base+4)) & (mask)) ? 1 : 0)  //PORTX + 0x10
@@ -79,6 +86,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*(base+1)) = (mask))            //TRISXCLR + 0x04
 #define DIRECT_WRITE_LOW(base, mask)    ((*(base+8+1)) = (mask))          //LATXCLR  + 0x24
 #define DIRECT_WRITE_HIGH(base, mask)   ((*(base+8+2)) = (mask))          //LATXSET + 0x28
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
@@ -98,9 +106,12 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__SAMD21G18A__) /* arduino zero */
+// https://github.com/arduino/ArduinoCore-samd
+
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         (((*((base)+8)) & (mask)) ? 1 : 0)
@@ -108,9 +119,12 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+2)) = (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+5)) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+6)) = (mask))
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#elif defined(RBL_NRF51822) || defined(NRF5) /* arduino primo, red bear blend, should be good for all nrf5x chips */
+#elif defined(NRF52) /* arduino primo */
+// https://github.com/arduino-org/arduino-core-nrf52
+
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
@@ -118,8 +132,26 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
 #define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL)
 #define DIRECT_MODE_OUTPUT(base, pin)   nrf_gpio_cfg_output(pin)
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
+#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
+// using io_reg_t = uint32_t; // define special data type for register-access
 
-#define io_reg_t uint32_t     /* the tool chain is old .... */
+#elif defined(NRF51) /* red bear blend, should be good for all nrf51x chips */
+// https://github.com/RedBearLab/nRF51822-Arduino
+
+#if defined(TARGET_NRF51822)
+#include <nRF51822_API.h>
+#endif
+
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (pin)
+#define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
+#define DIRECT_WRITE_LOW(base, pin)     nrf_gpio_pin_clear(pin)
+#define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
+#define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL)
+#define DIRECT_MODE_OUTPUT(base, pin)   nrf_gpio_cfg_output(pin)
+#define DELAY_MICROSECONDS(us)		    nrf_delay_us(us) // TODO: only needed because of faulty redbear-delay()-implementation
+#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 // using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__arc__) /* Arduino101/Genuino101 specifics */
@@ -199,11 +231,12 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
     }
 }
 
-#define DIRECT_READ(base, pin)		directRead(base, pin)
+#define DIRECT_READ(base, pin)		    directRead(base, pin)
 #define DIRECT_MODE_INPUT(base, pin)	directModeInput(base, pin)
 #define DIRECT_MODE_OUTPUT(base, pin)	directModeOutput(base, pin)
-#define DIRECT_WRITE_LOW(base, pin)	directWriteLow(base, pin)
+#define DIRECT_WRITE_LOW(base, pin)	    directWriteLow(base, pin)
 #define DIRECT_WRITE_HIGH(base, pin)	directWriteHigh(base, pin)
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 
 #else // any unknown architecture, including PC
 
@@ -216,6 +249,7 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 #define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
 #define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
