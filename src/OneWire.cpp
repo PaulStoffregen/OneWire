@@ -320,7 +320,7 @@ void OneWire::reset_search()
     search_last_device_flag = false;
     search_last_family_discrepancy = 0;
 
-    memset(search_rom_array, 0, 8);
+    memset(search_rom_array, uint8_t(0), 8);
 }
 
 // Setup the search to find the device type 'family_code' on the next call
@@ -330,7 +330,7 @@ void OneWire::target_search(const uint8_t family_code)
 {
     // set the search state to find SearchFamily type devices
     search_rom_array[0] = family_code;
-    memset(&search_rom_array[1], 0, 7);
+    memset(&search_rom_array[1], uint8_t(0), 7);
     search_last_discrepancy = 64;
     search_last_family_discrepancy = 0;
     search_last_device_flag = false;
