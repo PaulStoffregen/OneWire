@@ -22,7 +22,6 @@
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
-#define DIRECT_ACTIVATE_PU(base, mask)  DIRECT_MODE_INPUT(base, mask)
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__)
@@ -35,11 +34,6 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+128) = 1)
 using io_reg_t = uint8_t; // define special data type for register-access
 
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
-#endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
-
 #elif defined(__MKL26Z64__)
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
@@ -49,11 +43,6 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+8) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
 using io_reg_t = uint8_t; // define special data type for register-access
-
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
-#endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
 
 #elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__)
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
@@ -76,9 +65,8 @@ using io_reg_t = uint8_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
+#error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
 
 #elif defined(__PIC32MX__)
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
@@ -91,9 +79,8 @@ using io_reg_t = uint32_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
+#error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
 
 #elif defined(ARDUINO_ARCH_ESP8266)
 // Special note: I depend on the ESP community to maintain these definitions and
@@ -110,11 +97,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
-#endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
-
 #elif defined(__SAMD21G18A__)
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
@@ -126,9 +108,8 @@ using io_reg_t = uint32_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
+#error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
 
 #elif defined(RBL_NRF51822)
 #define PIN_TO_BASEREG(pin)             (0)
@@ -141,9 +122,9 @@ using io_reg_t = uint32_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
+#error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
+
 
 #elif defined(__arc__) /* Arduino101/Genuino101 specifics */
 
@@ -165,9 +146,8 @@ using io_reg_t = uint32_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented for your microcontroller"
+#error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
 
 static inline __attribute__((always_inline))
 IO_REG_TYPE directRead(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
@@ -242,8 +222,6 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#define DIRECT_ACTIVATE_PU(base, mask)  // note: add function for PU activation here
-
 #warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
 
 #endif
@@ -265,6 +243,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define INPUT 1
+#define INPUT_PULLUP 1
 #define OUTPUT 0
 #define HIGH 1
 #define LOW 0

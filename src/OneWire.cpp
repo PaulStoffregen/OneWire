@@ -144,13 +144,15 @@ sample code bearing this copyright.
 OneWire::OneWire(const uint8_t pin)
 {
     // prepare pin
-    pinMode(pin, INPUT);
-    pin_bitMask = PIN_TO_BITMASK(pin);
-    pin_baseReg = PIN_TO_BASEREG(pin);
 
 #if ONEWIRE_USE_PULL_UP
-    DIRECT_ACTIVATE_PU(pin_baseReg, pin_bitMask);
+    pinMode(pin, INPUT_PULLUP);
+#else
+    pinMode(pin, INPUT);
 #endif
+
+    pin_bitMask = PIN_TO_BITMASK(pin);
+    pin_baseReg = PIN_TO_BASEREG(pin);
 
     reset_search(); // really needed?
 }
