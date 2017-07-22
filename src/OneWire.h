@@ -46,10 +46,13 @@ public:
     ~OneWire() = default;                             // nothing special to do here
 
     OneWire(const OneWire &ow) = delete;             // disallow copy constructor
-    OneWire(OneWire &&ow) = default;               // default move constructor
     OneWire &operator=(OneWire &ow) = delete;        // disallow copy assignment
     OneWire &operator=(const OneWire &ow) = delete;  // disallow copy assignment
+
+#if (ONEWIRE_GCC_VERSION > 40900)
+    OneWire(OneWire &&ow) = default;               // default move constructor
     OneWire &operator=(OneWire &&ow) = delete;       // disallow move assignment
+#endif
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the

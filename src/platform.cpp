@@ -11,11 +11,6 @@ void noInterrupts() { };
 
 void interrupts() { };
 
-uint8_t pgm_read_byte(const uint8_t * const address)
-{
- return *address;
-}
-
 #endif // ONEWIRE_FALLBACK_BASIC_FNs
 
 

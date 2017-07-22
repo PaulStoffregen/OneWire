@@ -526,7 +526,8 @@ uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8
 
     for (uint8_t index = 0; index < data_size; ++index)
     {
-        crc = pgm_read_byte(crc_table + (crc ^ data_array[index]));
+        const uint8_t* address = crc_table + (crc ^ data_array[index]);
+        crc = pgm_read_byte(address);
     }
     return crc;
 }

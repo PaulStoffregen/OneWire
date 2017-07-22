@@ -3,11 +3,18 @@
 #ifndef ONEWIRE_PLATFORM_H
 #define ONEWIRE_PLATFORM_H
 
+// determine gcc version, will produce number like 40803 for gcc 4.8.3
+#if defined(__GNUC__)
+#define ONEWIRE_GCC_VERSION ( (__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
+#else
+#define ONEWIRE_GCC_VERSION 0
+#endif
+
 #if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
 #endif
 
-#if defined(__AVR__)
+#if defined(__AVR__) /* arduino (all with atmega, atiny) */
 #include <util/crc16.h>
 #define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
@@ -24,7 +31,7 @@
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
 using io_reg_t = uint8_t; // define special data type for register-access
 
-#elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__)
+#elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__) /* teensy 3.2 to 3.6 */
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (1)
 #define DIRECT_READ(base, mask)         (*((base)+512))
@@ -34,7 +41,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+128) = 1)
 using io_reg_t = uint8_t; // define special data type for register-access
 
-#elif defined(__MKL26Z64__)
+#elif defined(__MKL26Z64__) /* teensy LC */
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         ((*((base)+16) & (mask)) ? 1 : 0)
@@ -44,7 +51,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
 using io_reg_t = uint8_t; // define special data type for register-access
 
-#elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__)
+#elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__) /* arduino due */
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
 // http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
 // If you have trouble with OneWire on Arduino Due, please check the
@@ -64,10 +71,6 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #endif
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented or tested for your microcontroller"
-#endif
-
 #elif defined(__PIC32MX__)
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
@@ -82,7 +85,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
 
-#elif defined(ARDUINO_ARCH_ESP8266)
+#elif defined(ARDUINO_ARCH_ESP8266) /* nodeMCU, ESPduino, ... */
 // Special note: I depend on the ESP community to maintain these definitions and
 // submit good pull requests.  I can not answer any ESP questions or help you
 // resolve any problems related to ESP chips.  Please do not contact me and please
@@ -97,7 +100,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#elif defined(__SAMD21G18A__)
+#elif defined(__SAMD21G18A__) /* arduino zero */
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         (((*((base)+8)) & (mask)) ? 1 : 0)
@@ -107,11 +110,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+6)) = (mask))
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented or tested for your microcontroller"
-#endif
-
-#elif defined(RBL_NRF51822)
+#elif defined(RBL_NRF51822) || defined(NRF5) /* arduino primo, red bear blend, should be good for all nrf5x chips */
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
@@ -119,12 +118,9 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
 #define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL)
 #define DIRECT_MODE_OUTPUT(base, pin)   nrf_gpio_cfg_output(pin)
-using io_reg_t = uint32_t; // define special data type for register-access
 
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented or tested for your microcontroller"
-#endif
-
+#define io_reg_t uint32_t     /* the tool chain is old .... */
+// using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__arc__) /* Arduino101/Genuino101 specifics */
 
@@ -293,6 +289,12 @@ void noInterrupts();
 
 void interrupts();
 
+template<typename T1>
+T1 pgm_read_byte(const T1 *address)
+{
+    return *address;
+}
+
 #endif
 
 
@@ -312,7 +314,7 @@ static class serial
 {
 private:
 
-    static uint32_t speed;
+     uint32_t speed;
 
 public:
 
@@ -375,8 +377,6 @@ void wdt_enable(...);
 #ifndef PROGMEM
 #define PROGMEM
 #endif
-
-uint8_t pgm_read_byte(const uint8_t *address);
 
 #endif
 
