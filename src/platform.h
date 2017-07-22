@@ -10,6 +10,7 @@
 #define ONEWIRE_GCC_VERSION 0
 #endif
 
+#if defined(ARDUINO) && (ARDUINO>=100)
 #include <Arduino.h>
 #endif
 
