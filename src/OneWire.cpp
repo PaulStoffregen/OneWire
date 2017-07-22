@@ -2,7 +2,7 @@
 Copyright (c) 2007, Jim Studt  (original old version - many contributors since)
 
 The latest version of this library may be found at:
-  http://www.pjrc.com/teensy/td_libs_OneWire.html
+  https://github.com/PaulStoffregen/OneWire
 
 OneWire has been maintained by Paul Stoffregen (paul@pjrc.com) since
 January 2010.
@@ -106,17 +106,10 @@ OneWire::OneWire(const uint8_t pin)
     reset_search(); // really needed?
 }
 
-
-// Perform the onewire reset function.  We will wait up to 250uS for
-// the bus to come high, if it doesn't then it is broken or shorted
-// and we return a 0;
-//
-// Returns 1 if a device asserted a presence pulse, 0 otherwise.
-//
 bool OneWire::reset()
 {
-    const io_reg_t _bitMask=pin_bitMask; // local copies save pgm-space when called >1
-    volatile io_reg_t *_baseReg = pin_baseReg;
+    const io_reg_t _bitMask = pin_bitMask; // local copies save pgm-space when called >1
+    volatile io_reg_t* _baseReg = pin_baseReg;
 
     uint8_t retries = 125;
 
@@ -125,9 +118,10 @@ bool OneWire::reset()
     // wait until the wire is high... just in case
     do
     {
-        if (--retries == 0) return false;
+        if (--retries==0) return false;
         delayMicroseconds(2);
-    } while (!DIRECT_READ(_baseReg, _bitMask));
+    }
+    while (!DIRECT_READ(_baseReg, _bitMask));
 
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
     DIRECT_MODE_OUTPUT(_baseReg, _bitMask);    // drive output low
@@ -145,16 +139,12 @@ bool OneWire::reset()
     return success;
 }
 
-//
-// Write a bit. Port and bit is used to cut lookup time and provide
-// more certain timing.
-//
 void OneWire::write_bit(const bool value, const bool power)
 {
     const uint8_t time_high = uint8_t(value ? 10 : 60);
-    const uint8_t time_low  = uint8_t(value ? 55 : 5);
-    const io_reg_t _bitMask=pin_bitMask; // local copies save pgm-space when called >1
-    volatile io_reg_t *_baseReg = pin_baseReg;
+    const uint8_t time_low = uint8_t(value ? 55 : 5);
+    const io_reg_t _bitMask = pin_bitMask; // local copies save pgm-space when called >1
+    volatile io_reg_t* _baseReg = pin_baseReg;
 
     noInterrupts();
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
@@ -166,14 +156,10 @@ void OneWire::write_bit(const bool value, const bool power)
     delayMicroseconds(time_low);
 }
 
-//
-// Read a bit. Port and bit is used to cut lookup time and provide
-// more certain timing.
-//
 bool OneWire::read_bit()
 {
-    const io_reg_t _bitMask=pin_bitMask; // local copies save pgm-space when called >1
-    volatile io_reg_t *_baseReg = pin_baseReg;
+    const io_reg_t _bitMask = pin_bitMask; // local copies save pgm-space when called >1
+    volatile io_reg_t* _baseReg = pin_baseReg;
 
     noInterrupts();
     DIRECT_WRITE_LOW(_baseReg, _bitMask);
@@ -187,38 +173,28 @@ bool OneWire::read_bit()
     return value;
 }
 
-//
-// Write a byte. The writing code uses the active drivers to raise the
-// pin high, if you need power after the write (e.g. DS18S20 in
-// parasite power mode) then set 'power' to 1, otherwise the pin will
-// go tri-state at the end of the write to avoid heating in a short or
-// other mishap.
-//
 void OneWire::write(uint8_t value, const bool power)
 {
-    for (uint8_t index = 0; index < 8; index++)
+    for (uint8_t index = 0; index<8; index++)
     {
-        write_bit((value & 0x01) != 0, power); // shifting value is faster than clean solution with bitmask (~18 byte on arduino)
+        write_bit((value & 0x01)!=0, power); // shifting value is faster than clean solution with bitmask (~18 byte on arduino)
         value >>= 1;
     }
 }
 
 void OneWire::write_bytes(const uint8_t data_array[], const uint16_t data_size, const bool power)
 {
-    for (uint16_t index = 0; index < data_size; index++) // not slower than solution without index
+    for (uint16_t index = 0; index<data_size; index++) // not slower than solution without index
     {
         write(data_array[index], power);
     }
 }
 
-//
-// Read a byte
-//
 uint8_t OneWire::read()
 {
     uint8_t value = 0;
 
-    for (uint8_t bitMask = 0x01; bitMask != 0; bitMask <<= 1)
+    for (uint8_t bitMask = 0x01; bitMask!=0; bitMask <<= 1)
     {
         if (read_bit()) value |= bitMask;
     }
@@ -227,29 +203,23 @@ uint8_t OneWire::read()
 
 void OneWire::read_bytes(uint8_t data_array[], const uint16_t data_size)
 {
-    for (uint16_t index = 0; index < data_size; index++) // not slower than solution without index
+    for (uint16_t index = 0; index<data_size; index++) // not slower than solution without index
     {
         data_array[index] = read();
     }
 }
 
-//
-// Do a ROM select
-//
 void OneWire::select(const uint8_t rom_array[8])
 {
     write(0x55);           // Choose ROM
 
     uint8_t rom_size = 8; // clean solution with for(index) seems to be 6 byte larger
-    while (rom_size-- > 0)
+    while (rom_size-->0)
     {
         write(*rom_array++);
     }
 }
 
-//
-// Do a ROM skip
-//
 void OneWire::skip()
 {
     write(0xCC);           // Skip ROM
@@ -266,10 +236,6 @@ void OneWire::depower()
     DIRECT_MODE_INPUT(pin_baseReg, pin_bitMask);
 }
 
-//
-// You need to use this function to start a search again from the beginning.
-// You do not need to do it for the first search, though you could.
-//
 void OneWire::reset_search()
 {
     // reset the search state
@@ -280,9 +246,6 @@ void OneWire::reset_search()
     memset(search_rom_array, uint8_t(0), 8);
 }
 
-// Setup the search to find the device type 'family_code' on the next call
-// to search(*newAddr) if it is present.
-//
 void OneWire::target_search(const uint8_t family_code)
 {
     // set the search state to find SearchFamily type devices
@@ -293,22 +256,6 @@ void OneWire::target_search(const uint8_t family_code)
     search_last_device_flag = false;
 }
 
-//
-// Perform a search. If this function returns a '1' then it has
-// enumerated the next device and you may retrieve the ROM from the
-// OneWire::address variable. If there are no devices, no further
-// devices, or something horrible happens in the middle of the
-// enumeration then a 0 is returned.  If a new device is found then
-// its address is copied to newAddr.  Use OneWire::reset_search() to
-// start over.
-//
-// --- Replaced by the one from the Dallas Semiconductor web site ---
-//--------------------------------------------------------------------------
-// Perform the 1-Wire Search Algorithm on the 1-Wire bus using the existing
-// search state.
-// Return TRUE  : device found, ROM number in search_rom_array buffer
-//        FALSE : device not found, end of search
-//
 bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
 {
     uint8_t id_bit_number = 1;
@@ -358,7 +305,7 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
             {
                 bool search_direction;
                 // all devices coupled have 0 or 1
-                if (id_bit != cmp_id_bit)
+                if (id_bit!=cmp_id_bit)
                 {
                     search_direction = id_bit;  // bit write value for search
                 }
@@ -366,14 +313,14 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
                 {
                     // if this discrepancy if before the Last Discrepancy
                     // on a previous next then pick the same as last time
-                    if (id_bit_number < search_last_discrepancy)
+                    if (id_bit_number<search_last_discrepancy)
                     {
-                        search_direction = ((search_rom_array[rom_byte_number] & rom_byte_mask) > 0);
+                        search_direction = ((search_rom_array[rom_byte_number] & rom_byte_mask)>0);
                     }
                     else
                     {
                         // if equal to last pick 1, if not then pick 0
-                        search_direction = (id_bit_number == search_last_discrepancy);
+                        search_direction = (id_bit_number==search_last_discrepancy);
                     }
                     // if 0 was picked then record its position in LastZero
                     if (!search_direction)
@@ -381,7 +328,7 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
                         last_zero = id_bit_number;
 
                         // check for Last discrepancy in family
-                        if (last_zero < 9) search_last_family_discrepancy = last_zero;
+                        if (last_zero<9) search_last_family_discrepancy = last_zero;
                     }
                 }
 
@@ -404,22 +351,23 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
                 rom_byte_mask <<= 1;
 
                 // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
-                if (rom_byte_mask == 0)
+                if (rom_byte_mask==0)
                 {
                     rom_byte_number++;
                     rom_byte_mask = 1;
                 }
             }
-        } while (rom_byte_number < 8);  // loop until through all ROM bytes 0-7
+        }
+        while (rom_byte_number<8);  // loop until through all ROM bytes 0-7
 
         // if the search was successful then
-        if (id_bit_number >= 65)
+        if (id_bit_number>=65)
         {
             // search successful so set search_last_discrepancy,search_last_device_flag,search_result
             search_last_discrepancy = last_zero;
 
             // check for last device
-            if (search_last_discrepancy == 0)
+            if (search_last_discrepancy==0)
                 search_last_device_flag = true;
 
             search_result = true;
@@ -427,7 +375,7 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
     }
 
     // if no device found then reset counters so next 'search' will be like a first
-    if (!search_result || (search_rom_array[0] == 0))
+    if (!search_result || (search_rom_array[0]==0))
     {
         search_last_discrepancy = 0;
         search_last_device_flag = false;
@@ -468,20 +416,13 @@ static const uint8_t PROGMEM crc_table[] = {
         233, 183, 85, 11, 136, 214, 52, 106, 43, 117, 151, 201, 74, 20, 246, 168,
         116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53};
 
-//
-// Compute a Dallas Semiconductor 8 bit CRC. These show up in the ROM
-// and the registers.  (note: this might better be done without to
-// table, it would probably be smaller and certainly fast enough
-// compared to all those delayMicrosecond() calls.  But I got
-// confused, so I use this table from the examples.)
-//
 uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8_t crc_init)
 {
     uint8_t crc = crc_init;
 
-    for (uint8_t index = 0; index < data_size; ++index)
+    for (uint8_t index = 0; index<data_size; ++index)
     {
-        const uint8_t* address = crc_table + (crc ^ data_array[index]);
+        const uint8_t* address = crc_table+(crc ^ data_array[index]);
         crc = pgm_read_byte(address);
     }
     return crc;
@@ -515,10 +456,10 @@ uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8
 }
 #endif
 
-bool OneWire::check_crc16(const uint8_t data_array[], const uint16_t data_size, const uint8_t *inverted_crc, uint16_t crc)
+bool OneWire::check_crc16(const uint8_t data_array[], const uint16_t data_size, const uint8_t* inverted_crc, uint16_t crc)
 {
     crc = ~crc16(data_array, data_size, crc);
-    return (crc & 0xFF) == inverted_crc[0] && (crc >> 8) == inverted_crc[1];
+    return (crc & 0xFF)==inverted_crc[0] && (crc >> 8)==inverted_crc[1];
 }
 
 uint16_t OneWire::crc16(const uint8_t data_array[], uint16_t data_size, const uint16_t crc_init)
@@ -534,7 +475,7 @@ uint16_t OneWire::crc16(const uint8_t data_array[], uint16_t data_size, const ui
     static const uint8_t oddParity[16] =
             {0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0};
 
-    while (data_size-- > 0) // clean solution with for(index) seems to be 6 byte larger
+    while (data_size-->0) // clean solution with for(index) seems to be 6 byte larger
     {
         // Even though we're just copying a byte from the data_array,
         // we'll be doing 16-bit computation with it.
@@ -542,7 +483,7 @@ uint16_t OneWire::crc16(const uint8_t data_array[], uint16_t data_size, const ui
         cdata = (cdata ^ crc) & static_cast<uint16_t>(0xff);
         crc >>= 8;
 
-        if ((oddParity[cdata & 0x0F] ^ oddParity[cdata >> 4]) != 0)
+        if ((oddParity[cdata & 0x0F] ^ oddParity[cdata >> 4])!=0)
         {
             crc ^= 0xC001;
         }

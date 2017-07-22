@@ -1,18 +1,21 @@
 OneWire Master Library
 ======================
 
-### Features compared to lib 2.3.3
-- cleaner, smaller, faster code with c++11 features (requires arduino sw 1.6.x or higher, >=1.6.10 recommended)
+### Features
+- emulate a bus master in a generic way, the lib is handling most of the timing-constrains and the hardware-access
+- clean, small, fast code with c++11 features (requires arduino sw 1.6.x or higher, >=1.6.10 recommended)
 - proper naming of variables make it easier to read the code
 - hardware-dependencies are combined in "platform.h"
    - supported: arduino zero, teensy, sam3x, pic32, [ATtiny](https://github.com/damellis/attiny), esp8266, nrf51822, raspberry (...)
    - for portability and tests the hub can be compiled on a PC with the supplied mock-up functions in platform.h
-- more and better understandable examples
-- use command to enable or disable parasitic bus powering by the master (was implemented wrong before)
-- use compiler-switch to use pull-ups of micro controller 
-- improved documentation
+- extended and better understandable examples
+- command to enable or disable parasitic bus powering by the master (was implemented wrong before)
+- compiler-switch to use pull-ups of micro controller 
+- improved documentation in doxygen style
+- decided code style - Allman braces - was closest to main style in original
 
 ### Tested hardware
+- tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 - run as ds18x20-master: 
    - Arduino Uno (Arduino AVR Boards)
    - Teensy 3.2 (teensyduino)
@@ -50,12 +53,22 @@ OneWire Master Library
 - if you checked all these points feel free to open an issue at [Github](https://github.com/orgua/OneWire) and describe your troubleshooting process
    - please provide the following basic info: which µC do you use, software versions, what device do you try to work with, what works, what doesn't
    
+### Plans for the future
+
+- update the interface, NOTE: these changes can be made without breaking old code, just use "deprecated" on old interface 
+  - use overloaded functions read and write_bytes(), write(), write_bit() become just write()
+  - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
+  - predefine standard onewire commands and use send(), skip() is not needed then
+- another hardware abstraction to allow proper esp-use
+- unit tests
+- CI
+
 ### Development history
 Version 3.0
-- allow to use internal pull-up if micro controller has support for it -> most support INPUT_PULLUP used on pinMode(), others will get an errormessage if feature is enables
+- update documentation, doxygen style
+- allow to use internal pull-up if micro controller has support for it -> most µC support INPUT_PULLUP in combination with pinMode(), others will get an errormessage if feature is enabled but not supported / tested
 - clean up compiler-switches
 - better implementation to allow parasitic power to bus, otherwise master will act as open-drain-only! -> this was totally wrong before as the bus was powered for a short amount of time even if powering is disabled
-- some µC enable pin-pullups when writing pin=high when pin is in input-mode -> use it, does not harm other
 - extend examples with ds2438 and a bus-discovery feature
 - clean up examples, easier to understand, more similar to each other
 - put hardware dependant code into platform.h
@@ -63,7 +76,8 @@ Version 3.0
 - simplify pin-access and interrupt-handling
 - improve onewire class-interface (it was possible to copy the object, ...) 
 - reduce size of data types if possible, more const correctness and more explicit code
-- get rid of plain old c and decide on one code style
+- get rid of most ancient c and cpp code and reduce language mix
+- decide on one code style - Allman braces - was closest to main style in original
 
 Version 2.3
 - Unknown chip fallback mode, Roger Clark
@@ -106,15 +120,6 @@ Version before 2.0
 - Updated to work with arduino-0008 and to include skip() as of 2007/07/06. --RJL20
 - Modified to calculate the 8-bit CRC directly, avoiding the need for the 256-byte lookup table to be loaded in RAM.  Tested in arduino-0010 -- Tom Pollard, Jan 23, 2008
 
-### Plans for the future
-- update documentation, maybe doxygen
-- update the interface, NOTE: these changes can be made without breaking old code, just use "deprecated" on old interface 
-  - use overloaded functions read and write_bytes(), write(), write_bit() become just write()
-  - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
-  - predefine standard onewire commands and use send(), skip() is not needed then
-- unit tests
-- CI
-
 ### Connecting the master with the bus: 
 
 - the shown picture does not show the power line (assumes parasitic powering)
@@ -131,8 +136,10 @@ advantages:
 
 how to do it:
 - you will need to activate power-argument on the send-routines or use power()-function of the master
-- for low power devices like the ds2401 it should be possible to just lower the resistance of the pullup-resistor of the bus and 
+- for low power devices like the ds2401 it should be possible to just lower the resistance of the pullup-resistor of the bus (~1k)
 - most slave devices have the circuit shown in the lower picture already included (consult datasheet)
+- note: you should only activate / use this feature if you know what you are doing
+- possible safety-precaution: do not directly connect the master-pin to the bus, instead add ~200 Ohm between -> in case of shortage or any other bus failure there will only be ~16mA of current flowing 
 
 ![Parasite-Power-Schematic](http://i.stack.imgur.com/0MeGL.jpg)
 

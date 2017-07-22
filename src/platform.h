@@ -10,7 +10,6 @@
 #define ONEWIRE_GCC_VERSION 0
 #endif
 
-#if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
 #endif
 
@@ -247,35 +246,27 @@ using io_reg_t = uint32_t; // define special data type for register-access
 static bool mockup_pin_value[256];
 
 template<typename T1>
-bool digitalRead(const T1 pin)
-{ return (mockup_pin_value[pin & 0xFF] != 0); }; // mock up outputs
+bool digitalRead(const T1 pin) { return (mockup_pin_value[pin & 0xFF]!=0); }; // mock up outputs
 
 template<typename T1, typename T2>
-void digitalWrite(const T1 pin, const T2 value)
-{ mockup_pin_value[pin & 0xFF] = value; };
+void digitalWrite(const T1 pin, const T2 value) { mockup_pin_value[pin & 0xFF] = value; };
 
 template<typename T1, typename T2>
-void pinMode(const T1 pin, const T2 value)
-{ mockup_pin_value[pin & 0xFF] = value; };
+void pinMode(const T1 pin, const T2 value) { mockup_pin_value[pin & 0xFF] = value; };
 
 template<typename T1>
-T1 digitalPinToPort(const T1 pin)
-{ return pin; };
+T1 digitalPinToPort(const T1 pin) { return pin; };
 
 template<typename T1>
-T1 *portInputRegister(const T1 port)
-{ return port; };
+T1* portInputRegister(const T1 port) { return port; };
 
 template<typename T1>
-T1 digitalPinToBitMask(const T1 pin)
-{ return pin; };
+T1 digitalPinToBitMask(const T1 pin) { return pin; };
 
-constexpr uint32_t microsecondsToClockCycles(const uint32_t micros)
-{ return (100 * micros); }; // mockup, emulate 100 MHz CPU
+constexpr uint32_t microsecondsToClockCycles(const uint32_t micros) { return (100*micros); }; // mockup, emulate 100 MHz CPU
 
 template<typename T1>
-void delayMicroseconds(const T1 micros)
-{};
+void delayMicroseconds(const T1 micros) { };
 
 /// the following fn are no templates and need to be defined in platform.cpp
 
@@ -290,13 +281,12 @@ void noInterrupts();
 void interrupts();
 
 template<typename T1>
-T1 pgm_read_byte(const T1 *address)
+T1 pgm_read_byte(const T1* address)
 {
     return *address;
 }
 
 #endif
-
 
 #ifdef ONEWIRE_FALLBACK_ADDITIONAL_FNs // Test to make it work on aTtiny85, 8MHz
 /// README: use pin2 or pin3 for Attiny, source: https://github.com/gioblu/PJON/wiki/ATtiny-interfacing
@@ -309,59 +299,50 @@ T1 pgm_read_byte(const T1 *address)
 #define HEX 2
 #endif
 
-
-static class serial
-{
+static class serial {
 private:
 
-     uint32_t speed;
+    uint32_t speed;
 
 public:
 
-    void print(...)
-    {};
+    void print(...) { };
 
-    void println(...)
-    {};
+    void println(...) { };
 
-    void flush()
-    {};
+    void flush() { };
 
-    void begin(const uint32_t speed_baud)
-    { speed = speed_baud; };
+    void begin(const uint32_t speed_baud) { speed = speed_baud; };
 
 } Serial;
 
-
 template<typename T1, typename T2>
-void memset(T1 *const address, const T1 initValue, const T2 bytes)
+void memset(T1* const address, const T1 initValue, const T2 bytes)
 {
-    const T2 iterations = bytes / sizeof(T1);
-    for (T2 counter = 0; counter < iterations; ++counter)
+    const T2 iterations = bytes/sizeof(T1);
+    for (T2 counter = 0; counter<iterations; ++counter)
     {
         address[counter] = (initValue);
     }
 }
 
-
 template<typename T1, typename T2>
-void memcpy(T1 *const destination, const T1 *const source, const T2 bytes)
+void memcpy(T1* const destination, const T1* const source, const T2 bytes)
 {
-    const T2 iterations = bytes / sizeof(T1);
-    for (T2 counter = 0; counter < iterations; ++counter)
+    const T2 iterations = bytes/sizeof(T1);
+    for (T2 counter = 0; counter<iterations; ++counter)
     {
         destination[counter] = source[counter];
     }
 }
 
-
 template<typename T1, typename T2>
-bool memcmp(const T1 *const source_A, const T1 *const source_B, const T2 bytes) // return true if string is different
+bool memcmp(const T1* const source_A, const T1* const source_B, const T2 bytes) // return true if string is different
 {
-    const T2 iterations = bytes / sizeof(T1);
-    for (T2 counter = 0; counter < iterations; ++counter)
+    const T2 iterations = bytes/sizeof(T1);
+    for (T2 counter = 0; counter<iterations; ++counter)
     {
-        if (source_A[counter] != source_B[counter]) return true;
+        if (source_A[counter]!=source_B[counter]) return true;
     };
     return false;
 }
