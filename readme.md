@@ -6,7 +6,7 @@ OneWire Master Library
 - clean, small, fast code with c++11 features (requires arduino sw 1.6.x or higher, >=1.6.10 recommended)
 - proper naming of variables make it easier to read the code
 - hardware-dependencies are combined in "platform.h"
-   - supported: arduino zero, teensy, sam3x, pic32, [ATtiny](https://github.com/damellis/attiny), esp8266, nrf51822, raspberry (...)
+   - supported: arduino uno / zero / due / primo, teensy, sam3x, pic32, ATtiny, esp8266, nrf51822, raspberry (...)
    - for portability and tests the hub can be compiled on a PC with the supplied mock-up functions in platform.h
 - extended and better understandable examples
 - command to enable or disable parasitic bus powering by the master (was implemented wrong before)
@@ -17,16 +17,20 @@ OneWire Master Library
 ### Tested hardware
 - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 - run as ds18x20-master: 
-   - Arduino Uno (Arduino AVR Boards)
-   - Teensy 3.2 (teensyduino)
+   - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
+   - Teensy 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
 - compile process passes: 
-   - Teensy LC (teensyduino)
-   - Teensy 3.6 (teensyduino)
-   - Arduino Zero native USB (Arduino SAMD Boards (32-bits ARM Cortex-M0+))
-   - Arduino Primo (Arduino nRF52 Boards)
-   - Arduino Due native USB (Arduino SAMD Boards (32-bits ARM Cortex-M3))
-   - ATtiny 84 (attiny)
-   - generic ESP8266 (esp8266)
+   - Teensy LC ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Teensy 3.6 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Arduino Zero native USB ([Arduino SAMD Boards (32-bits ARM Cortex-M0+)](https://github.com/arduino/ArduinoCore-samd))
+   - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))
+   - Arduino Due native USB ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam))
+   - ATtiny 84 ([attiny](https://github.com/damellis/attiny))
+   - generic ESP8266 ([esp8266](https://github.com/esp8266/Arduino))
+- untested
+   - [pic32](https://github.com/chipKIT32/chipKIT-core)
+   - [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
+   - Arduino 101 ([Intel Curie Boards](https://github.com/01org/corelibs-arduino101))
 
 ### How to use
 - understanding [onewire protocol](https://en.wikipedia.org/wiki/1-Wire) helps a lot during "how to"
@@ -54,13 +58,12 @@ OneWire Master Library
    - please provide the following basic info: which µC do you use, software versions, what device do you try to work with, what works, what doesn't
    
 ### Plans for the future
-
 - update the interface, NOTE: these changes can be made without breaking old code, just use "deprecated" on old interface 
   - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
   - predefine standard onewire commands and use send(), skip() is not needed then
 - unit tests
 - CI
-- maybe add stm32 support: https://github.com/arduino-org/arduino-core-stm32f4
+- add stm32f4 support: https://github.com/arduino-org/arduino-core-stm32f4
 
 ### Development history
 Version 3.0

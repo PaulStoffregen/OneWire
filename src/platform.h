@@ -33,6 +33,7 @@
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__) /* teensy 3.2 to 3.6 */
+
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (1)
 #define DIRECT_READ(base, mask)         (*((base)+512))
@@ -44,6 +45,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__MKL26Z64__) /* teensy LC */
+
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         ((*((base)+16) & (mask)) ? 1 : 0)
@@ -55,7 +57,6 @@ using io_reg_t = uint8_t; // define special data type for register-access
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__) /* arduino due */
-// https://github.com/arduino/ArduinoCore-sam
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
 // http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
 // If you have trouble with OneWire on Arduino Due, please check the
@@ -77,7 +78,6 @@ using io_reg_t = uint8_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__PIC32MX__)
-// https://github.com/chipKIT32/chipKIT-core
 
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
@@ -110,7 +110,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__SAMD21G18A__) /* arduino zero */
-// https://github.com/arduino/ArduinoCore-samd
 
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
@@ -123,7 +122,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(NRF52) /* arduino primo */
-// https://github.com/arduino-org/arduino-core-nrf52
 
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
@@ -137,7 +135,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 // using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(NRF51) /* red bear blend, should be good for all nrf51x chips */
-// https://github.com/RedBearLab/nRF51822-Arduino
 
 #if defined(TARGET_NRF51822)
 #include <nRF51822_API.h>
