@@ -1,13 +1,18 @@
 language: python
 
 python:
-    - "2.7"
+  - "2.7"
 
 install:
-    - python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+  - python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+
+before_script:
+  - platformio init --board uno --board due
 
 script:
-- platformio ci examples/DS18x20_Temperature --board=uno --board=due --board=zero --board=teensy30 --board=teensy31 --board=teensy35 --board=teensy36 --board=esp01
+  - platformio ci --lib="." --board=uno --board=due
+
+#--board=zero --board=teensy30 --board=teensy31 --board=teensy35 --board=teensy36 --board=esp01
 
 #       examples/DS18x20_Temperature/DS18x20_Temperature.ino
 #       examples/DS2408_Switch/DS2408_Switch.ino
