@@ -134,7 +134,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 // using io_reg_t = uint32_t; // define special data type for register-access
 
-#elif defined(NRF51) || defined(RFduino) /* red bear blend, should be good for all nrf51x chips */
+#elif defined(NRF51) || defined(__RFduino__) /* red bear blend, should be good for all nrf51x chips */
 
 #if defined(TARGET_NRF51822)
 #include <nRF51822_API.h>
@@ -151,7 +151,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 // using io_reg_t = uint32_t; // define special data type for register-access
 
-#elif defined(__arc__) /* Arduino101/Genuino101 specifics */
+#elif defined(__arc__) || defined(__ARDUINO_ARC__) /* Arduino101/Genuino101 specifics */
 
 #include "scss_registers.h"
 #include "portable.h"

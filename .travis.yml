@@ -33,3 +33,6 @@ script:
 
 #elif defined(NRF52) /* arduino primo */
 #elif defined(NRF51) /* red bear blend, should be good for all nrf51x chips */
+#esp32
+#stm32
+#msp430
