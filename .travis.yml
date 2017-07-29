@@ -13,14 +13,14 @@ install:
   - pip install -U platformio
 
 env:
-  - PIO_BRD: "'-b=uno'"         # arduino uno
-  - PIO_BRD: "'-b=due'"         # arduino due
-  - PIO_BRD: "'-b=zero'"        # arduino zero
-  - PIO_BRD: "'-b=teensy30 -b=teensy31 -b=teensy35 -b=teensy36'"
-  - PIO_BRD: "'-b=esp01 -b=nodemcuv2 -b=espduino'"
-  - PIO_BRD: "'-b=rfduino'"     # nrf51
-  - PIO_BRD: "'-b=lenny'"       # pic32mx
-  - PIO_BRD: "'-b=genuino101'"  # intel curie
+  - PIO_BRD: "'-b uno'"         # arduino uno
+  - PIO_BRD: "'-b due'"         # arduino due
+  - PIO_BRD: "'-b zero'"        # arduino zero
+  - PIO_BRD: "'-b teensy30 -b teensy31 -b teensy35 -b teensy36'" # teensy
+  - PIO_BRD: "'-b esp01 -b nodemcuv2 -b espduino'"               # esp8266
+  - PIO_BRD: "'-b rfduino'"     # nrf51
+  - PIO_BRD: "'-b lenny'"       # pic32mx
+  - PIO_BRD: "'-b genuino101'"  # intel curie
 
 before_script:
   - platformio init $PIO_BRD
