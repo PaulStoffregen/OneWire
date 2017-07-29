@@ -1,6 +1,8 @@
 OneWire Master Library
 ======================
 
+[![Build Status](https://travis-ci.org/orgua/OneWire.svg?branch=master)](https://travis-ci.org/orgua/OneWire)
+
 ### Features
 - emulate a bus master in a generic way, the lib is handling most of the timing-constrains and the hardware-access
 - clean, small, fast code with c++11 features (requires arduino sw 1.6.x or higher, >=1.6.10 recommended)
