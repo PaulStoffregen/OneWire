@@ -1,0 +1,37 @@
+# source: https://github.com/udoklein/dcf77/blob/master/.travis.yml
+
+language: cpp
+
+env:
+  global:
+    - ARDUINO_PACKAGE_VERSION=1.8.3
+    - DISPLAY=:1.0
+
+  matrix:
+    - TARGET_BOARD=diecimila
+    - TARGET_BOARD=leonardo
+    - TARGET_BOARD=due
+
+before_script:
+  - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/xvfb_$TRAVIS_JOB_NUMBER.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
+  - wget -q -O- http://downloads.arduino.cc/arduino-$ARDUINO_PACKAGE_VERSION-linux64.tar.xz | unxz -c | tar -xf -
+
+  - mkdir -p ~/Arduino/libraries/
+  - ln -s $TRAVIS_BUILD_DIR ~/Arduino/libraries/
+  - $TRAVIS_BUILD_DIR/arduino-$ARDUINO_PACKAGE_VERSION/arduino --install-boards arduino:sam
+
+  - function log()            { RCODE="$1"; MSG="$2";                           if [ "$RCODE" -ne 0 ]; then echo "failure for $MSG" >> build_log.txt; return 1; else echo "success for $MSG" >> build_log.txt; fi; }
+  - function build_sketch()   { BOARD="$1"; SPEC=$2 EXAMPLE="$3";               $TRAVIS_BUILD_DIR/arduino-$ARDUINO_PACKAGE_VERSION/arduino --verbose --verify --board "$SPEC" $TRAVIS_BUILD_DIR/examples/$EXAMPLE/$EXAMPLE.INO; log "$?" "$BOARD $EXAMPLE"; }
+  - function build_on_match() { BOARD="$1"; SPEC=$2 PATTERN="$3"; EXAMPLE="$4"; if [[ "$BOARD" =~ $PATTERN ]]; then build_sketch "$BOARD" "$SPEC" "$EXAMPLE"; else echo "excluded $BOARD $EXAMPLE" >> build_log.txt; fi; }
+  - function diecimila() { build_on_match "diecimila" arduino:avr:diecimila:cpu=atmega328 "$1" "$2"; }
+  - function leonardo()  { build_on_match "leonardo"  arduino:avr:leonardo                "$1" "$2"; }
+  - function due()       { build_on_match "due"       arduino:sam:arduino_due_x           "$1" "$2"; }
+
+script:
+  - $TARGET_BOARD "diecimila|leonardo|due" "bus_discovery"
+  - $TARGET_BOARD "diecimila|leonardo|due" "DS18x20_Temperature"
+  - $TARGET_BOARD "diecimila|leonardo|due" "DS2408_Switch"
+  - $TARGET_BOARD "diecimila|leonardo|due" "DS250x_PROM"
+  - $TARGET_BOARD "diecimila|leonardo|due" "DS2438_BatMon"
+  - echo; echo "finished script for $TARGET_BOARD"
+  - cat build_log.txt
