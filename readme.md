@@ -16,23 +16,32 @@ OneWire Master Library
 - improved documentation in doxygen style
 - decided code style - Allman braces - was closest to main style in original
 
-### Tested hardware
-- tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
+### Continues Integration and additional tests
+- Travis CI for different platforms
+   - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
+   - Arduino Due ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam))
+   - Arduino Zero ([Arduino SAMD Boards (32-bits ARM Cortex-M0+)](https://github.com/arduino/ArduinoCore-samd))
+   - Arduino 101 ([Intel Curie Boards](https://github.com/01org/corelibs-arduino101))
+   - Teensy 3.0 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Teensy 3.1 / 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Teensy 3.5 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Teensy LC ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Teensy 3.6 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - generic ESP8266 ([esp8266](https://github.com/esp8266/Arduino))
+   - nodeMCU V2 ([esp8266](https://github.com/esp8266/Arduino))
+   - espduino ([esp8266](https://github.com/esp8266/Arduino))
+   - RFduino nrf51 ([RFduino](https://github.com/RFduino/RFduino))
+   - ATtiny 84 / 88 ([attiny](https://github.com/damellis/attiny))
+   - Digispark tiny ([DigistumpArduino](https://github.com/digistump/DigistumpArduino))
 - run as ds18x20-master: 
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
    - Teensy 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 - compile process passes: 
-   - Teensy LC ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - Teensy 3.6 ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - Arduino Zero native USB ([Arduino SAMD Boards (32-bits ARM Cortex-M0+)](https://github.com/arduino/ArduinoCore-samd))
-   - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))
-   - Arduino Due native USB ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam))
-   - ATtiny 84 ([attiny](https://github.com/damellis/attiny))
-   - generic ESP8266 ([esp8266](https://github.com/esp8266/Arduino))
+   - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))   
 - untested
    - [pic32](https://github.com/chipKIT32/chipKIT-core)
-   - [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
-   - Arduino 101 ([Intel Curie Boards](https://github.com/01org/corelibs-arduino101))
+   - RedBear [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
 
 ### How to use
 - understanding [onewire protocol](https://en.wikipedia.org/wiki/1-Wire) helps a lot during "how to"
@@ -64,11 +73,12 @@ OneWire Master Library
   - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
   - predefine standard onewire commands and use send(), skip() is not needed then
 - unit tests
-- CI
+- overdrive and other features (alarm search)
 - add stm32f4 support: https://github.com/arduino-org/arduino-core-stm32f4
 
 ### Development history
 Version 3.0
+- added travis CI
 - delayMicroseconds() hardware abstraction to allow proper nRF51-use (redbear messed up the delaymicroseconds()-implementation)
    - will be removed as soon redbear fixes its code
 - overload write() to replace write_bytes() and read() to replace read_byte()

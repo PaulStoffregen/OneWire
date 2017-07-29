@@ -136,7 +136,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(NRF51) || defined(__RFduino__) /* red bear blend, should be good for all nrf51x chips */
 
-#if defined(TARGET_NRF51822)
+#if defined(TARGET_NRF51822) || defined(__RFduino__)
 #include <nRF51822_API.h>
 #endif
 
@@ -168,49 +168,49 @@ using io_reg_t = uint32_t; // define special data type for register-access
 /* GPIO registers base address */
 #define PIN_TO_BASEREG(pin)		((volatile uint32_t *)g_APinDescription[pin].ulGPIOBase)
 #define PIN_TO_BITMASK(pin)		pin
-#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
-//using io_reg_t = uint32_t; // define special data type for register-access
+//#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
+using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
 #error "PULL UP feature is not yet implemented or tested for your microcontroller"
 #endif
 
 static inline __attribute__((always_inline))
-IO_REG_TYPE directRead(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
+io_reg_t directRead(volatile io_reg_t *base, io_reg_t pin)
 {
-    IO_REG_TYPE ret;
+    io_reg_t ret;
     if (SS_GPIO == GPIO_TYPE(pin)) {
-        ret = READ_ARC_REG(((IO_REG_TYPE)base + EXT_PORT_OFFSET_SS));
+        ret = READ_ARC_REG(((io_reg_t)base + EXT_PORT_OFFSET_SS));
     } else {
-        ret = MMIO_REG_VAL_FROM_BASE((IO_REG_TYPE)base, EXT_PORT_OFFSET_SOC);
+        ret = MMIO_REG_VAL_FROM_BASE((io_reg_t)base, EXT_PORT_OFFSET_SOC);
     }
     return ((ret >> GPIO_ID(pin)) & 0x01);
 }
 
 static inline __attribute__((always_inline))
-void directModeInput(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
+void directModeInput(volatile io_reg_t *base, io_reg_t pin)
 {
     if (SS_GPIO == GPIO_TYPE(pin)) {
-        WRITE_ARC_REG(READ_ARC_REG((((IO_REG_TYPE)base) + DIR_OFFSET_SS)) & ~(0x01 << GPIO_ID(pin)),
-            ((IO_REG_TYPE)(base) + DIR_OFFSET_SS));
+        WRITE_ARC_REG(READ_ARC_REG((((io_reg_t)base) + DIR_OFFSET_SS)) & ~(0x01 << GPIO_ID(pin)),
+            ((io_reg_t)(base) + DIR_OFFSET_SS));
     } else {
-        MMIO_REG_VAL_FROM_BASE((IO_REG_TYPE)base, DIR_OFFSET_SOC) &= ~(0x01 << GPIO_ID(pin));
+        MMIO_REG_VAL_FROM_BASE((io_reg_t)base, DIR_OFFSET_SOC) &= ~(0x01 << GPIO_ID(pin));
     }
 }
 
 static inline __attribute__((always_inline))
-void directModeOutput(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
+void directModeOutput(volatile io_reg_t *base, io_reg_t pin)
 {
     if (SS_GPIO == GPIO_TYPE(pin)) {
-        WRITE_ARC_REG(READ_ARC_REG(((IO_REG_TYPE)(base) + DIR_OFFSET_SS)) | (0x01 << GPIO_ID(pin)),
-            ((IO_REG_TYPE)(base) + DIR_OFFSET_SS));
+        WRITE_ARC_REG(READ_ARC_REG(((io_reg_t)(base) + DIR_OFFSET_SS)) | (0x01 << GPIO_ID(pin)),
+            ((io_reg_t)(base) + DIR_OFFSET_SS));
     } else {
-        MMIO_REG_VAL_FROM_BASE((IO_REG_TYPE)base, DIR_OFFSET_SOC) |= (0x01 << GPIO_ID(pin));
+        MMIO_REG_VAL_FROM_BASE((io_reg_t)base, DIR_OFFSET_SOC) |= (0x01 << GPIO_ID(pin));
     }
 }
 
 static inline __attribute__((always_inline))
-void directWriteLow(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
+void directWriteLow(volatile io_reg_t *base, io_reg_t pin)
 {
     if (SS_GPIO == GPIO_TYPE(pin)) {
         WRITE_ARC_REG(READ_ARC_REG(base) & ~(0x01 << GPIO_ID(pin)), base);
@@ -220,7 +220,7 @@ void directWriteLow(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 }
 
 static inline __attribute__((always_inline))
-void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
+void directWriteHigh(volatile io_reg_t *base, io_reg_t pin)
 {
     if (SS_GPIO == GPIO_TYPE(pin)) {
         WRITE_ARC_REG(READ_ARC_REG(base) | (0x01 << GPIO_ID(pin)), base);
