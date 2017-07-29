@@ -3,8 +3,19 @@ language: python
 python:
   - "2.7"
 
+sudo: false
+
+cache:
+  directories:
+    - "~/.platformio"
+
+env:
+  - PLATFORMIO_CI_SRC=examples/DS18x20_Temperature
+  - PLATFORMIO_CI_SRC=examples/DS2408_Switch
+  - PLATFORMIO_CI_SRC=examples/DS250x_PROM
+  - PLATFORMIO_CI_SRC=examples/DS2438_BatMon
+
 install:
-#  - python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
   - pip install -U platformio
 
 before_script:
@@ -14,11 +25,6 @@ script:
   - platformio ci --lib="." --board=uno --board=due
 
 #--board=zero --board=teensy30 --board=teensy31 --board=teensy35 --board=teensy36 --board=esp01
-
-#       examples/DS18x20_Temperature/DS18x20_Temperature.ino
-#       examples/DS2408_Switch/DS2408_Switch.ino
-#      examples/DS250x_PROM/DS250x_PROM.ino
-#      examples/DS2438_BatMon/DS2438_BatMon.ino
 
 #elif defined(__PIC32MX__)
 #elif defined(ARDUINO_ARCH_ESP8266) /* nodeMCU, ESPduino, ... */
