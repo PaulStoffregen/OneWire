@@ -38,7 +38,10 @@ OneWire Master Library
    - Teensy 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
    - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 - compile process passes: 
-   - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))   
+   - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))  
+   - Teensy 2.0 ([teensyduino](https://github.com/PaulStoffregen/cores)) 
+   - Teensy 2.0++ ([teensyduino](https://github.com/PaulStoffregen/cores)) 
+   - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 - untested
    - [pic32](https://github.com/chipKIT32/chipKIT-core) -> platformIO has an error
    - RedBear [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
@@ -74,7 +77,16 @@ OneWire Master Library
   - predefine standard onewire commands and use send(), skip() is not needed then
 - unit tests
 - overdrive and other features (alarm search)
-- add stm32f4 support: https://github.com/arduino-org/arduino-core-stm32f4
+- add or extend hardware support
+  - stm32f4     https://github.com/arduino-org/arduino-core-stm32f4
+  - esp32       https://github.com/espressif/arduino-esp32
+  - stm32       https://github.com/rogerclarkmelbourne/Arduino_STM32
+  - msp430 E    https://github.com/energia/Energia
+  - msp430 arduino, platformIO speaks of a different framework
+- add travis tests, currently not supported
+   - NRF52 /* arduino primo */
+   - NRF51 /* red bear blend, should be good for all nrf51x chips */
+   - pic32 -> problem with toolchain in platformIO
 
 ### Development history
 Version 3.0

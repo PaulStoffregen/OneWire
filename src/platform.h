@@ -161,7 +161,8 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
-using io_reg_t = uint32_t; // define special data type for register-access
+#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
+//using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__arc__) || defined(__ARDUINO_ARC__) /* Arduino101/Genuino101 specifics */
 
