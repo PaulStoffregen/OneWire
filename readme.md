@@ -16,22 +16,18 @@ OneWire Master Library
 - improved documentation in doxygen style
 - decided code style - Allman braces - was closest to main style in original
 
-### Supported Hardware: Continuous Integration and additional tests
-- Travis CI for different platforms
+### Supported Hardware:
+- Travis CI (Continuous Integration) for different platforms
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
    - Arduino Due ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam))
    - Arduino Zero ([Arduino SAMD Boards (32-bits ARM Cortex-M0+)](https://github.com/arduino/ArduinoCore-samd))
    - Arduino 101 ([Intel Curie Boards](https://github.com/01org/corelibs-arduino101))
-   - Teensy 3.0 ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - Teensy 3.1 / 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - Teensy 3.5 ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - Teensy LC ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - Teensy 3.6 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Teensy 3.0, 3.1, 3.2, LC, 3.5, 3.6 ([teensyduino](https://github.com/PaulStoffregen/cores))
    - generic ESP8266 ([esp8266](https://github.com/esp8266/Arduino))
    - nodeMCU V2 ([esp8266](https://github.com/esp8266/Arduino))
    - espduino ([esp8266](https://github.com/esp8266/Arduino))
    - RFduino nrf51 ([RFduino](https://github.com/RFduino/RFduino))
-   - ATtiny 84 / 88 ([attiny](https://github.com/damellis/attiny)??)
+   - ATtiny 84, 88 ([attiny](https://github.com/damellis/attiny)??)
    - Digispark tiny ([DigistumpArduino](https://github.com/digistump/DigistumpArduino))
 - embedded test: run as ds18x20-master
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
@@ -39,8 +35,7 @@ OneWire Master Library
    - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 - compile test: process passes 
    - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))  
-   - Teensy 2.0 ([teensyduino](https://github.com/PaulStoffregen/cores)) 
-   - Teensy 2.0++ ([teensyduino](https://github.com/PaulStoffregen/cores)) 
+   - Teensy 2.0, 2.0++ ([teensyduino](https://github.com/PaulStoffregen/cores)) 
    - Digilent chipKIT UNO32 [pic32](https://github.com/chipKIT32/chipKIT-core)
    - RedBear [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
    - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
