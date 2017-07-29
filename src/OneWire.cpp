@@ -439,7 +439,7 @@ uint8_t OneWire::crc8(const uint8_t data_array[], uint8_t data_size, const uint8
 
     while (data_size-- > 0) // clean solution with for(index) seems to be 6 byte larger
     {
-#if defined(__AVR__)
+#if defined(__AVR__) && !defined(TEENSYDUINO)
         crc = _crc_ibutton_update(crc, *data_array++);
 #else
         uint8_t inByte = *data_array++;
@@ -466,7 +466,7 @@ uint16_t OneWire::crc16(const uint8_t data_array[], uint16_t data_size, const ui
 {
     uint16_t crc = crc_init; // init value
 
-#if defined(__AVR__)
+#if defined(__AVR__) && !defined(TEENSYDUINO)
     while (data_size-- > 0)
     {
         crc = _crc16_update(crc, *data_array++);

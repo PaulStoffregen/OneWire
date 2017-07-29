@@ -31,7 +31,7 @@ OneWire Master Library
    - nodeMCU V2 ([esp8266](https://github.com/esp8266/Arduino))
    - espduino ([esp8266](https://github.com/esp8266/Arduino))
    - RFduino nrf51 ([RFduino](https://github.com/RFduino/RFduino))
-   - ATtiny 84 / 88 ([attiny](https://github.com/damellis/attiny))
+   - ATtiny 84 / 88 ([attiny](https://github.com/damellis/attiny)??)
    - Digispark tiny ([DigistumpArduino](https://github.com/digistump/DigistumpArduino))
 - run as ds18x20-master: 
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
@@ -40,7 +40,7 @@ OneWire Master Library
 - compile process passes: 
    - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))   
 - untested
-   - [pic32](https://github.com/chipKIT32/chipKIT-core)
+   - [pic32](https://github.com/chipKIT32/chipKIT-core) -> platformIO has an error
    - RedBear [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
 
 ### How to use
@@ -78,6 +78,7 @@ OneWire Master Library
 
 ### Development history
 Version 3.0
+- extend and fix hardware support (special esp-boards, ...)
 - added travis CI
 - delayMicroseconds() hardware abstraction to allow proper nRF51-use (redbear messed up the delaymicroseconds()-implementation)
    - will be removed as soon redbear fixes its code

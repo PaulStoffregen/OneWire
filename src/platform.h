@@ -134,9 +134,9 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 // using io_reg_t = uint32_t; // define special data type for register-access
 
-#elif defined(NRF51) || defined(__RFduino__) /* red bear blend, should be good for all nrf51x chips */
+#elif defined(NRF51) /* red bear blend, should be good for all nrf51x chips */
 
-#if defined(TARGET_NRF51822) || defined(__RFduino__)
+#if defined(TARGET_NRF51822)
 #include <nRF51822_API.h>
 #endif
 
@@ -150,6 +150,18 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DELAY_MICROSECONDS(us)		    nrf_delay_us(us) // TODO: only needed because of faulty redbear-delay()-implementation
 #define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 // using io_reg_t = uint32_t; // define special data type for register-access
+
+#elif defined(__RFduino__) /* rf51 chip with special implementation */
+
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (pin)
+#define DIRECT_READ(base, pin)          digitalRead(pin)
+#define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
+#define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
+#define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
+using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__arc__) || defined(__ARDUINO_ARC__) /* Arduino101/Genuino101 specifics */
 
@@ -168,7 +180,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 /* GPIO registers base address */
 #define PIN_TO_BASEREG(pin)		((volatile uint32_t *)g_APinDescription[pin].ulGPIOBase)
 #define PIN_TO_BITMASK(pin)		pin
-//#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #if ONEWIRE_USE_PULL_UP
