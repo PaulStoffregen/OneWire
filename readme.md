@@ -16,7 +16,7 @@ OneWire Master Library
 - improved documentation in doxygen style
 - decided code style - Allman braces - was closest to main style in original
 
-### Continues Integration and additional tests
+### Supported Hardware: Continuous Integration and additional tests
 - Travis CI for different platforms
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
    - Arduino Due ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam))
@@ -33,18 +33,17 @@ OneWire Master Library
    - RFduino nrf51 ([RFduino](https://github.com/RFduino/RFduino))
    - ATtiny 84 / 88 ([attiny](https://github.com/damellis/attiny)??)
    - Digispark tiny ([DigistumpArduino](https://github.com/digistump/DigistumpArduino))
-- run as ds18x20-master: 
+- embedded test: run as ds18x20-master
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
    - Teensy 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
    - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
-- compile process passes: 
+- compile test: process passes 
    - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))  
    - Teensy 2.0 ([teensyduino](https://github.com/PaulStoffregen/cores)) 
    - Teensy 2.0++ ([teensyduino](https://github.com/PaulStoffregen/cores)) 
-   - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
-- untested
-   - [pic32](https://github.com/chipKIT32/chipKIT-core) -> platformIO has an error
+   - Digilent chipKIT UNO32 [pic32](https://github.com/chipKIT32/chipKIT-core)
    - RedBear [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
+   - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
 
 ### How to use
 - understanding [onewire protocol](https://en.wikipedia.org/wiki/1-Wire) helps a lot during "how to"
@@ -73,24 +72,25 @@ OneWire Master Library
    
 ### Plans for the future
 - update the interface, NOTE: these changes can be made without breaking old code, just use "deprecated" on old interface 
-  - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
-  - predefine standard onewire commands and use send(), skip() is not needed then
+   - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
+   - predefine standard onewire commands and use send(), skip() is not needed then
 - unit tests
 - overdrive and other features (alarm search)
 - add or extend hardware support
-  - stm32f4     https://github.com/arduino-org/arduino-core-stm32f4
-  - esp32       https://github.com/espressif/arduino-esp32
-  - stm32       https://github.com/rogerclarkmelbourne/Arduino_STM32
-  - msp430 E    https://github.com/energia/Energia
-  - msp430 arduino, platformIO speaks of a different framework
+   - stm32f4     https://github.com/arduino-org/arduino-core-stm32f4
+   - esp32       https://github.com/espressif/arduino-esp32
+   - stm32       https://github.com/rogerclarkmelbourne/Arduino_STM32
+   - msp430 E    https://github.com/energia/Energia
+   - msp430 arduino, platformIO speaks of a different framework
 - add travis tests, currently not supported
    - NRF52 /* arduino primo */
    - NRF51 /* red bear blend, should be good for all nrf51x chips */
    - pic32 -> problem with toolchain in platformIO
+   - teensy 2 -> crc-lib has linker problem in platformIO
 
 ### Development history
 Version 3.0
-- extend and fix hardware support (special esp-boards, ...)
+- extend and fix hardware support (specially esp-boards, ...)
 - added travis CI
 - delayMicroseconds() hardware abstraction to allow proper nRF51-use (redbear messed up the delaymicroseconds()-implementation)
    - will be removed as soon redbear fixes its code

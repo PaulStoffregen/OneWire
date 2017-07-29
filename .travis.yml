@@ -20,8 +20,7 @@ env:
 #  - PIO_BRD: "'-b teensy20 -b teensy20pp'"                       # teensy 2
   - PIO_BRD: "'-b esp01 -b nodemcuv2 -b espduino'"               # esp8266
   - PIO_BRD: "'-b rfduino'"     # nrf51
-#  - PIO_BRD: "'-b lenny'"       # pic32mx
-  - PIO_BRD: "'-b uno_pic32'"       # pic32mx
+#  - PIO_BRD: "'-b lenny -b uno_pic32'"       # pic32mx -> error: pic32-g++ not found
   - PIO_BRD: "'-b genuino101'"  # intel curie
   - PIO_BRD: "'-b attiny88 -b attiny84'"  # attiny
   - PIO_BRD: "'-b digispark-tiny'"  # attiny
