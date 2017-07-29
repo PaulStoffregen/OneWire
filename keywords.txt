@@ -13,6 +13,7 @@ OneWire	KEYWORD1
 #######################################
 
 reset	KEYWORD2
+setPin	KEYWORD2
 write_bit	KEYWORD2
 read_bit	KEYWORD2
 write	KEYWORD2
@@ -32,6 +33,7 @@ check_crc16	KEYWORD2
 # Instances (KEYWORD2)
 #######################################
 
+setPin	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

@@ -139,7 +139,7 @@ sample code bearing this copyright.
 //--------------------------------------------------------------------------
 */
 
-#include "OneWire.h"
+#include "onewire.h"
 
 
 OneWire::OneWire(uint8_t pin)
@@ -149,6 +149,20 @@ OneWire::OneWire(uint8_t pin)
 	baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
 	reset_search();
+#endif
+}
+
+OneWire::OneWire()
+{
+}
+
+void OneWire::setPin(uint8_t pin)
+{
+  pinMode(pin, INPUT);
+  bitmask = PIN_TO_BITMASK(pin);
+  baseReg = PIN_TO_BASEREG(pin);
+#if ONEWIRE_SEARCH
+  reset_search();
 #endif
 }
 
