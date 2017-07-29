@@ -9,20 +9,25 @@ cache:
   directories:
     - "~/.platformio"
 
-env:
-  - PLATFORMIO_CI_SRC=examples/DS18x20_Temperature
-  - PLATFORMIO_CI_SRC=examples/DS2408_Switch
-  - PLATFORMIO_CI_SRC=examples/DS250x_PROM
-  - PLATFORMIO_CI_SRC=examples/DS2438_BatMon
+#env:
+#  - PLATFORMIO_CI_SRC=examples/DS18x20_Temperature
+#  - PLATFORMIO_CI_SRC=examples/DS2408_Switch
+#  - PLATFORMIO_CI_SRC=examples/DS250x_PROM
+#  - PLATFORMIO_CI_SRC=examples/DS2438_BatMon
 
 install:
   - pip install -U platformio
 
+env:
+  - PIO_BRD=uno
+  - PIO_BRD=due
+  - PIO_BRD=zero
+
 before_script:
-  - platformio init --board uno --board due
+  - platformio init --board $PIO_BRD
 
 script:
-  - platformio ci --lib="." --board=uno --board=due
+  - platformio ci --lib="." --board $PIO_BRD ./examples/DS18x20_Temperature/DS18x20_Temperature.ino
 
 #--board=zero --board=teensy30 --board=teensy31 --board=teensy35 --board=teensy36 --board=esp01
 
