@@ -116,7 +116,13 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_READ(base, pin)          digitalRead(pin)
 #define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
 #define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
-#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
+
+#if ONEWIRE_USE_PULL_UP
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin, INPUT_PULLUP)
+#else
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin, INPUT)
+#endif
+
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
@@ -190,7 +196,13 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_READ(base, pin)          digitalRead(pin)
 #define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
 #define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
-#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
+
+#if ONEWIRE_USE_PULL_UP
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin, INPUT_PULLUP)
+#else
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin, INPUT)
+#endif
+
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 //using io_reg_t = uint32_t; // define special data type for register-access
@@ -285,7 +297,13 @@ void directWriteHigh(volatile io_reg_t *base, io_reg_t pin)
 #define DIRECT_READ(base, pin)          digitalRead(pin)
 #define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
 #define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
-#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
+
+#if ONEWIRE_USE_PULL_UP
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin, INPUT_PULLUP)
+#else
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin, INPUT)
+#endif
+
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
@@ -293,7 +311,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
 
 #if ONEWIRE_USE_PULL_UP
-#warning "Internal pull up of controller is NOT strong enough to power the OW-Bus!"
+#warning "Internal pull up of controller is probably not strong enough to power the OW-Bus!"
 #endif
 
 #endif
