@@ -92,8 +92,9 @@ OneWire Master Library
 
 ### Development history
 Version 3.0
+- real life tested with several platforms (atmega, atsamD21, Atsam3x, esp8266, esp32, teensy)
 - extend and fix hardware support (specially esp-boards, esp32, ...)
-- added travis CI
+- added travis CI for a big bunch of controllers
 - delayMicroseconds() hardware abstraction to allow proper nRF51-use (redbear messed up the delaymicroseconds()-implementation)
    - will be removed as soon redbear fixes its code
 - overload write() to replace write_bytes() and read() to replace read_byte()
