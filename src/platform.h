@@ -77,6 +77,10 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #endif
 using io_reg_t = uint32_t; // define special data type for register-access
 
+#if ONEWIRE_USE_PULL_UP
+#warning "Internal pull up of controller is NOT strong enough to power the OW-Bus!"
+#endif
+
 #elif defined(__PIC32MX__)
 
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
@@ -88,10 +92,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_WRITE_HIGH(base, mask)   ((*(base+8+2)) = (mask))          //LATXSET + 0x28
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
-
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented or tested for your microcontroller"
-#endif
 
 #elif defined(ARDUINO_ARCH_ESP8266) /* nodeMCU, ESPduino, ... */
 // Special note: I depend on the ESP community to maintain these definitions and
@@ -109,6 +109,22 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (pin)
+#define DIRECT_READ(base, pin)          digitalRead(pin)
+#define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
+#define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
+#define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
+#define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
+using io_reg_t = uint32_t; // define special data type for register-access
+
+#if ONEWIRE_USE_PULL_UP
+#warning "Internal pull up of controller is NOT strong enough to power the OW-Bus!"
+#endif
+
 #elif defined(__SAMD21G18A__) /* arduino zero */
 
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
@@ -121,6 +137,10 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
+#if ONEWIRE_USE_PULL_UP
+#warning "Internal pull up of controller is NOT strong enough to power the OW-Bus!"
+#endif
+
 #elif defined(NRF52) /* arduino primo */
 
 #define PIN_TO_BASEREG(pin)             (0)
@@ -128,11 +148,17 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
 #define DIRECT_WRITE_LOW(base, pin)     nrf_gpio_pin_clear(pin)
 #define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
+
+#if ONEWIRE_USE_PULL_UP
+#define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLUP)
+#else
 #define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL)
+#endif
+
 #define DIRECT_MODE_OUTPUT(base, pin)   nrf_gpio_cfg_output(pin)
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
+//using io_reg_t = uint32_t; // define special data type for register-access
 #define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
-// using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(NRF51) /* red bear blend, should be good for all nrf51x chips */
 
@@ -145,11 +171,17 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
 #define DIRECT_WRITE_LOW(base, pin)     nrf_gpio_pin_clear(pin)
 #define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
+
+#if ONEWIRE_USE_PULL_UP
+#define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLUP)
+#else
 #define DIRECT_MODE_INPUT(base, pin)    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_NOPULL)
+#endif
+
 #define DIRECT_MODE_OUTPUT(base, pin)   nrf_gpio_cfg_output(pin)
 #define DELAY_MICROSECONDS(us)		    nrf_delay_us(us) // TODO: only needed because of faulty redbear-delay()-implementation
+//using io_reg_t = uint32_t; // define special data type for register-access
 #define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
-// using io_reg_t = uint32_t; // define special data type for register-access
 
 #elif defined(__RFduino__) /* rf51 chip with special implementation */
 
@@ -161,8 +193,8 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
-#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 //using io_reg_t = uint32_t; // define special data type for register-access
+#define io_reg_t uint32_t     /* TODO: the tool chain is old .... check for updates, last 2017-07 */
 
 #elif defined(__arc__) || defined(__ARDUINO_ARC__) /* Arduino101/Genuino101 specifics */
 
@@ -182,10 +214,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define PIN_TO_BASEREG(pin)		((volatile uint32_t *)g_APinDescription[pin].ulGPIOBase)
 #define PIN_TO_BITMASK(pin)		pin
 using io_reg_t = uint32_t; // define special data type for register-access
-
-#if ONEWIRE_USE_PULL_UP
-#error "PULL UP feature is not yet implemented or tested for your microcontroller"
-#endif
 
 static inline __attribute__((always_inline))
 io_reg_t directRead(volatile io_reg_t *base, io_reg_t pin)
@@ -263,6 +291,10 @@ void directWriteHigh(volatile io_reg_t *base, io_reg_t pin)
 using io_reg_t = uint32_t; // define special data type for register-access
 
 #warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
+
+#if ONEWIRE_USE_PULL_UP
+#warning "Internal pull up of controller is NOT strong enough to power the OW-Bus!"
+#endif
 
 #endif
 

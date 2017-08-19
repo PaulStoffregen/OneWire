@@ -4,20 +4,29 @@ OneWire Master Library
 [![Build Status](https://travis-ci.org/orgua/OneWire.svg?branch=master)](https://travis-ci.org/orgua/OneWire)
 
 ### Features
-- emulate a bus master in a generic way, the lib is handling most of the timing-constrains and the hardware-access
-- clean, small, fast code with c++11 features (requires arduino sw 1.6.x or higher, >=1.6.10 recommended)
+- emulates a bus master in a generic way, the lib is handling most of the timing-constrains and the hardware-access
+- clean, small, fast code with c++11 features (requires arduino sw 1.6.x or higher)
 - proper naming of variables make it easier to read the code
-- hardware-dependencies are combined in "platform.h"
-   - supported: arduino uno / zero / due / primo, teensy, sam3x, pic32, ATtiny, esp8266, nrf51822, raspberry (...)
-   - for portability and tests the hub can be compiled on a PC with the supplied mock-up functions in platform.h
-- extended and better understandable examples
+- hardware-dependencies are combined in "platform.h" (see next section)
+   - for portability and tests the lib can be compiled on a PC with the supplied mock-up functions in platform.h
+- extended and easy understandable examples
 - command to enable or disable parasitic bus powering by the master (was implemented wrong before)
 - compiler-switch to use pull-ups of micro controller 
 - improved documentation in doxygen style
-- decided code style - Allman braces - was closest to main style in original
+- decided on one code style - Allman braces - was closest to main style in original
 
-### Supported Hardware:
-- Travis CI (Continuous Integration) for different platforms
+### Supported and tested Hardware
+- embedded real life test
+   - setup: run ds18x20-master, enabled internal pull up (if possible), arduino 1.8.3, Windows 10 and the board-library named in the brackets
+   - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
+   - Arduino Due ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam)) -> NOTE: internal PU is not strong enough to power bus
+   - Arduino MKRZero ([Arduino SAMD Boards (32-bits ARM Cortex-M0+)](https://github.com/arduino/ArduinoCore-samd)) -> NOTE: internal PU is not strong enough to power bus
+   - Teensy 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
+   - Wemos D1 Mini ESP32S ([esp32](https://github.com/espressif/arduino-esp32)) -> NOTE: internal PU is not strong enough to power bus
+   - Wemos Wifi & BT ESP32 ([esp32](https://github.com/espressif/arduino-esp32)) -> NOTE: internal PU is not strong enough to power bus
+   - Wemos D1 R2 ([esp8266](https://github.com/esp8266/Arduino))
+   - nodeMCU 1.0 ESP-12E ([esp8266](https://github.com/esp8266/Arduino))
+- Travis CI (automated Continuous Integration) for different platforms
    - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
    - Arduino Due ([Arduino SAMD Boards (32-bits ARM Cortex-M3)](https://github.com/arduino/ArduinoCore-sam))
    - Arduino Zero ([Arduino SAMD Boards (32-bits ARM Cortex-M0+)](https://github.com/arduino/ArduinoCore-samd))
@@ -26,19 +35,18 @@ OneWire Master Library
    - generic ESP8266 ([esp8266](https://github.com/esp8266/Arduino))
    - nodeMCU V2 ([esp8266](https://github.com/esp8266/Arduino))
    - espduino ([esp8266](https://github.com/esp8266/Arduino))
+   - ESP32 dev module ([esp32](https://github.com/espressif/arduino-esp32))
    - RFduino nrf51 ([RFduino](https://github.com/RFduino/RFduino))
    - ATtiny 84, 88 ([attiny](https://github.com/damellis/attiny)??)
    - Digispark tiny ([DigistumpArduino](https://github.com/digistump/DigistumpArduino))
-- embedded test: run as ds18x20-master
-   - Arduino Uno ([Arduino AVR Boards](https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr))
-   - Teensy 3.2 ([teensyduino](https://github.com/PaulStoffregen/cores))
-   - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
-- compile test: process passes 
+- manual compile test: process passes 
+   - setup: run ds18x20-master, arduino 1.8.3, Windows 10 and the board-library named in the brackets
    - Arduino Primo ([Arduino nRF52 Boards](https://github.com/arduino-org/arduino-core-nrf52))  
    - Teensy 2.0, 2.0++ ([teensyduino](https://github.com/PaulStoffregen/cores)) 
    - Digilent chipKIT UNO32 [pic32](https://github.com/chipKIT32/chipKIT-core)
    - RedBear [nRF51](https://github.com/RedBearLab/nRF51822-Arduino)
-   - tested with arduino 1.8.3, Windows 10 and the board-library named in the brackets
+- if you successfully tested a new controller don't hesitate to open an issue on github to document it
+- if you modified / extended the lib to support new hardware don't hesitate to open a pull request on github
 
 ### How to use
 - understanding [onewire protocol](https://en.wikipedia.org/wiki/1-Wire) helps a lot during "how to"
@@ -73,7 +81,6 @@ OneWire Master Library
 - overdrive and other features (alarm search)
 - add or extend hardware support
    - stm32f4     https://github.com/arduino-org/arduino-core-stm32f4
-   - esp32       https://github.com/espressif/arduino-esp32
    - stm32       https://github.com/rogerclarkmelbourne/Arduino_STM32
    - msp430 E    https://github.com/energia/Energia
    - msp430 arduino, platformIO speaks of a different framework
@@ -85,13 +92,13 @@ OneWire Master Library
 
 ### Development history
 Version 3.0
-- extend and fix hardware support (specially esp-boards, ...)
+- extend and fix hardware support (specially esp-boards, esp32, ...)
 - added travis CI
 - delayMicroseconds() hardware abstraction to allow proper nRF51-use (redbear messed up the delaymicroseconds()-implementation)
    - will be removed as soon redbear fixes its code
 - overload write() to replace write_bytes() and read() to replace read_byte()
-- update documentation, doxygen style
-- allow to use internal pull-up if micro controller has support for it -> most µC support INPUT_PULLUP in combination with pinMode(), others will get an errormessage if feature is enabled but not supported / tested
+- update code documentation, doxygen style
+- allow to use internal pull-up if micro controller has support for it -> most µC support INPUT_PULLUP in combination with pinMode(), others will get an error message or warning if feature is enabled but not supported / tested
 - clean up compiler-switches
 - better implementation to allow parasitic power to bus, otherwise master will act as open-drain-only! -> this was totally wrong before as the bus was powered for a short amount of time even if powering is disabled
 - extend examples with ds2438 and a bus-discovery feature
@@ -100,9 +107,10 @@ Version 3.0
 - better naming of variables and a lot of code cleanup
 - simplify pin-access and interrupt-handling
 - improve onewire class-interface (it was possible to copy the object, ...) 
-- reduce size of data types if possible, more const correctness and more explicit code
+- reduce size of data types if possible, more const correctness and much more explicit code
 - get rid of most ancient c and cpp code and reduce language mix
 - decide on one code style - Allman braces - was closest to main style in original
+- a lot of how-to documentation for this lib inside this readme
 
 Version 2.3
 - Unknown chip fallback mode, Roger Clark
@@ -147,7 +155,7 @@ Version before 2.0
 
 ### Connecting the master with the bus: 
 
-- the shown picture does not show the power line (assumes parasitic powering)
+- the picture does not show the power line (assumes parasitic powering)
 - by activating the internal pull up of the microcontroller you most likely do not need external PU
 
 ![Onewire-Schematic](http://wiki.lvl1.org/images/1/15/Onewire.gif)

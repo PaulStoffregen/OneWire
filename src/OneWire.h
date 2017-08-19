@@ -5,8 +5,6 @@
 #include <Arduino.h>       // for delayMicroseconds, digitalPinToBitMask, etc
 #endif
 
-#include "platform.h"
-
 // Select the table-lookup method of computing the 8-bit CRC
 // by setting this to 1.  The lookup table enlarges code size by
 // about 250 bytes.  It does NOT consume RAM (but did in very
@@ -15,7 +13,7 @@
 #define ONEWIRE_USE_CRC8_TABLE 1
 
 // micro controller feature to use internal pull-ups
-// NOTE: will throw compiler-error if feature is not yet implemented or tested for your controller
+// NOTE: may work, depends on controler and bus-load -> analyse signal traces with scope for reassurance
 #define ONEWIRE_USE_PULL_UP  0
 
 // to make the bus more secure you can disable parasitic bus powering
@@ -24,7 +22,7 @@
 // NOTE: you need to power the devices yourself, because the external
 // PU-resistor might not do it completely
 
-
+#include "platform.h"
 
 
 class OneWire {
