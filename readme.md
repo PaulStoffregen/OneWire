@@ -78,6 +78,7 @@ OneWire Master Library
    - simplify bus powering as extra argument for reset and read as well, OR we set it on bus constructor
    - predefine standard onewire commands and use send(), skip() is not needed then
 - unit tests
+- collect timings in variables
 - overdrive and other features (alarm search)
 - add or extend hardware support
    - stm32f4     https://github.com/arduino-org/arduino-core-stm32f4
