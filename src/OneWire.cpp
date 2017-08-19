@@ -241,7 +241,6 @@ void OneWire::reset_search()
     // reset the search state
     search_last_discrepancy = 0;
     search_last_device_flag = false;
-    search_last_family_discrepancy = 0;
 
     memset(search_rom_array, uint8_t(0), 8);
 }
@@ -252,7 +251,6 @@ void OneWire::target_search(const uint8_t family_code)
     search_rom_array[0] = family_code;
     memset(&search_rom_array[1], uint8_t(0), 7);
     search_last_discrepancy = 64;
-    search_last_family_discrepancy = 0;
     search_last_device_flag = false;
 }
 
@@ -275,7 +273,6 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
             // reset the search
             search_last_discrepancy = 0;
             search_last_device_flag = false;
-            search_last_family_discrepancy = 0;
             return false;
         }
 
@@ -326,9 +323,6 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
                     if (!search_direction)
                     {
                         last_zero = id_bit_number;
-
-                        // check for Last discrepancy in family
-                        if (last_zero<9) search_last_family_discrepancy = last_zero;
                     }
                 }
 
@@ -379,7 +373,6 @@ bool OneWire::search(uint8_t new_rom_array[], const bool search_mode)
     {
         search_last_discrepancy = 0;
         search_last_device_flag = false;
-        search_last_family_discrepancy = 0;
         search_result = false;
     }
     else

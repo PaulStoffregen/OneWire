@@ -34,8 +34,7 @@ private:
     /// search state
     uint8_t search_rom_array[8];
     uint8_t search_last_discrepancy;
-    uint8_t search_last_family_discrepancy;
-    bool search_last_device_flag;
+    bool    search_last_device_flag;
 
 public:
 
