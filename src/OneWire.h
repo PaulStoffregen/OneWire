@@ -24,6 +24,9 @@
 
 #include "platform.h"
 
+#if defined(__AVR__) /* arduino (all with atmega, atiny) */
+#include <util/crc16.h> // TODO tryout if PIO compiles with this next to actual FN, not outsourced
+#endif
 
 class OneWire {
 private:
