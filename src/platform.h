@@ -70,7 +70,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 #define PROGMEM
 #endif
 #ifndef pgm_read_byte
-#define pgm_read_byte(addr) (*(const uint8_t *)(addr))
+#define pgm_read_byte(address) (*(const uint8_t *)(address))
 #endif
 using io_reg_t = uint32_t; // define special data type for register-access
 
@@ -414,8 +414,8 @@ public:
 template<typename T1, typename T2>
 void memset(T1* const address, const T1 initValue, const T2 bytes)
 {
-    const T2 iterations = bytes/sizeof(T1);
-    for (T2 counter = 0; counter<iterations; ++counter)
+    const T2 iterations = bytes / sizeof(T1);
+    for (T2 counter = 0; counter < iterations; ++counter)
     {
         address[counter] = (initValue);
     }
@@ -424,8 +424,8 @@ void memset(T1* const address, const T1 initValue, const T2 bytes)
 template<typename T1, typename T2>
 void memcpy(T1* const destination, const T1* const source, const T2 bytes)
 {
-    const T2 iterations = bytes/sizeof(T1);
-    for (T2 counter = 0; counter<iterations; ++counter)
+    const T2 iterations = bytes / sizeof(T1);
+    for (T2 counter = 0; counter < iterations; ++counter)
     {
         destination[counter] = source[counter];
     }
@@ -434,10 +434,10 @@ void memcpy(T1* const destination, const T1* const source, const T2 bytes)
 template<typename T1, typename T2>
 bool memcmp(const T1* const source_A, const T1* const source_B, const T2 bytes) // return true if string is different
 {
-    const T2 iterations = bytes/sizeof(T1);
-    for (T2 counter = 0; counter<iterations; ++counter)
+    const T2 iterations = bytes / sizeof(T1);
+    for (T2 counter = 0; counter < iterations; ++counter)
     {
-        if (source_A[counter]!=source_B[counter]) return true;
+        if (source_A[counter] != source_B[counter]) return true;
     };
     return false;
 }
@@ -452,8 +452,8 @@ void wdt_enable(...);
 
 #ifndef PROGMEM
 #define PROGMEM
-#endif
+#endif // PROGMEM
 
-#endif
+#endif // ONEWIRE_FALLBACK_ADDITIONAL_FNs
 
 #endif //ONEWIRE_PLATFORM_H

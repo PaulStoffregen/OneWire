@@ -1,10 +1,6 @@
 #ifndef OneWire_h
 #define OneWire_h
 
-#if defined(ARDUINO) && ARDUINO>=100
-#include <Arduino.h>       // for delayMicroseconds, digitalPinToBitMask, etc
-#endif
-
 // Select the table-lookup method of computing the 8-bit CRC
 // by setting this to 1.  The lookup table enlarges code size by
 // about 250 bytes.  It does NOT consume RAM (but did in very
@@ -23,10 +19,6 @@
 // PU-resistor might not do it completely
 
 #include "platform.h"
-
-#if defined(__AVR__) /* arduino (all with atmega, atiny) */
-#include <util/crc16.h> // TODO tryout if PIO compiles with this next to actual FN, not outsourced
-#endif
 
 class OneWire {
 private:
