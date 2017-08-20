@@ -79,6 +79,7 @@ OneWire Master Library
    - predefine standard onewire commands and use send(), skip() is not needed then
 - unit tests
 - collect timings in variables
+- add pull up support directly to constructor
 - overdrive and other features (alarm search)
 - add or extend hardware support
    - stm32f4     https://github.com/arduino-org/arduino-core-stm32f4
