@@ -1,0 +1,44 @@
+os:    linux
+dist:  trusty
+group: edge
+sudo:  false
+
+language: python
+
+python:
+  - "2.7"
+
+cache:
+  pip: true
+  apt: true
+  directories:
+    - "~/.platformio"
+
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
+
+before_install:
+  - pip install -U platformio
+
+env:
+  - PIO_BRD: "'-b uno'"         # arduino uno
+  - PIO_BRD: "'-b due'"         # arduino due
+  - PIO_BRD: "'-b zero'"        # arduino zero
+  - PIO_BRD: "'-b teensy30 -b teensy31 -b teensy35 -b teensy36'" # teensy 3
+#  - PIO_BRD: "'-b teensy20 -b teensy20pp'"                       # teensy 2 -> crc-lib has linker problem in platformIO but works in arduino-sw
+  - PIO_BRD: "'-b esp01 -b nodemcuv2 -b espduino'"               # esp8266
+  - PIO_BRD: "'-b espino32 -b esp32dev'"  # esp8266
+  - PIO_BRD: "'-b rfduino'"               # nrf51
+#  - PIO_BRD: "'-b lenny -b uno_pic32'"    # pic32mx -> error: pic32-g++ not found
+  - PIO_BRD: "'-b genuino101'"            # intel curie
+  - PIO_BRD: "'-b attiny88 -b attiny84'"  # attiny
+  - PIO_BRD: "'-b digispark-tiny'"        # attiny
+
+before_script:
+  - platformio init $PIO_BRD
+
+script:
+  - platformio ci --lib="." $PIO_BRD ./examples/DS18x20_Temperature/DS18x20_Temperature.ino
+  - platformio ci --lib="." $PIO_BRD ./examples/DS2408_Switch/DS2408_Switch.ino
+  - platformio ci --lib="." $PIO_BRD ./examples/DS250x_PROM/DS250x_PROM.ino
+  - platformio ci --lib="." $PIO_BRD ./examples/DS2438_BatMon/DS2438_BatMon.ino
