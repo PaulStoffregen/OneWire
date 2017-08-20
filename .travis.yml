@@ -1,15 +1,23 @@
+os:    linux
+dist:  trusty
+group: edge
+sudo:  false
+
 language: python
 
 python:
   - "2.7"
 
-sudo: false
-
 cache:
+  pip: true
+  apt: true
   directories:
     - "~/.platformio"
 
-install:
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
+
+before_install:
   - pip install -U platformio
 
 env:
@@ -17,7 +25,7 @@ env:
   - PIO_BRD: "'-b due'"         # arduino due
   - PIO_BRD: "'-b zero'"        # arduino zero
   - PIO_BRD: "'-b teensy30 -b teensy31 -b teensy35 -b teensy36'" # teensy 3
-#  - PIO_BRD: "'-b teensy20 -b teensy20pp'"                       # teensy 2
+  - PIO_BRD: "'-b teensy20 -b teensy20pp'"                       # teensy 2 -> crc-lib has linker problem in platformIO
   - PIO_BRD: "'-b esp01 -b nodemcuv2 -b espduino'"               # esp8266
   - PIO_BRD: "'-b espino32 -b esp32dev'"  # esp8266
   - PIO_BRD: "'-b rfduino'"               # nrf51
