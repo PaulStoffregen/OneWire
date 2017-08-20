@@ -3,6 +3,10 @@
 #ifndef ONEWIRE_PLATFORM_H
 #define ONEWIRE_PLATFORM_H
 
+#if defined(ARDUINO) && (ARDUINO>=100)
+#include <Arduino.h>
+#endif
+
 // determine gcc version, will produce number like 40803 for gcc 4.8.3
 #if defined(__GNUC__)
 #define ONEWIRE_GCC_VERSION ( (__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
@@ -10,12 +14,8 @@
 #define ONEWIRE_GCC_VERSION 0
 #endif
 
-#if defined(ARDUINO) && (ARDUINO>=100)
-#include <Arduino.h>
-#endif
-
 #if defined(__AVR__) /* arduino (all with atmega, atiny) */
-#include <util/crc16.h>
+#include <util/crc16.h> // TODO tryout if PIO compiles with this next to actual FN, not outsourced
 #define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
@@ -57,10 +57,7 @@ using io_reg_t = uint8_t; // define special data type for register-access
 using io_reg_t = uint8_t; // define special data type for register-access
 
 #elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__) /* arduino due */
-// Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
-// http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
-// If you have trouble with OneWire on Arduino Due, please check the
-// status of delayMicroseconds() before reporting a bug in OneWire!
+
 #define PIN_TO_BASEREG(pin)             (&(digitalPinToPort(pin)->PIO_PER))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define DIRECT_READ(base, mask)         (((*((base)+15)) & (mask)) ? 1 : 0)
@@ -109,7 +106,7 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #define DELAY_MICROSECONDS(us)		    delayMicroseconds(us)
 using io_reg_t = uint32_t; // define special data type for register-access
 
-#elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32) /* ESP32 Family */
 
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
@@ -316,6 +313,13 @@ using io_reg_t = uint32_t; // define special data type for register-access
 
 #endif
 
+
+
+/////////////////////////////////////////// EXTRA PART /////////////////////////////////////////
+// this part is loaded if no proper arduino-environment is found (good for external testing)
+// these used functions are mockups
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef ARDUINO
 #define ONEWIRE_FALLBACK_BASIC_FNs
 #define ONEWIRE_FALLBACK_ADDITIONAL_FNs // to load up Serial below
@@ -326,11 +330,6 @@ using io_reg_t = uint32_t; // define special data type for register-access
 #endif
 
 #ifdef ONEWIRE_FALLBACK_BASIC_FNs
-
-/////////////////////////////////////////// EXTRA PART /////////////////////////////////////////
-// this part is loaded if no proper arduino-environment is found (good for external testing)
-// these used functions are mockups
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define INPUT 1
 #define INPUT_PULLUP 1
@@ -382,6 +381,7 @@ T1 pgm_read_byte(const T1* address)
 }
 
 #endif
+
 
 #ifdef ONEWIRE_FALLBACK_ADDITIONAL_FNs // Test to make it work on aTtiny85, 8MHz
 /// README: use pin2 or pin3 for Attiny, source: https://github.com/gioblu/PJON/wiki/ATtiny-interfacing
