@@ -139,6 +139,105 @@
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 
+#elif defined(ARDUINO_ARCH_ESP32)
+#include <driver/rtc_io.h>
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (pin)
+#define IO_REG_TYPE uint32_t
+#define IO_REG_ASM
+
+static inline __attribute__((always_inline))
+IO_REG_TYPE directRead(IO_REG_TYPE pin)
+{
+    if ( pin < 32 )
+        return (GPIO.in >> pin) & 0x1;
+    else if ( pin < 40 )
+        return (GPIO.in1.val >> (pin - 32)) & 0x1;
+
+    return 0;
+}
+
+static inline __attribute__((always_inline))
+void directWriteLow(IO_REG_TYPE pin)
+{
+    if ( pin < 32 )
+        GPIO.out_w1tc = ((uint32_t)1 << pin);
+    else if ( pin < 34 )
+        GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
+}
+
+static inline __attribute__((always_inline))
+void directWriteHigh(IO_REG_TYPE pin)
+{
+    if ( pin < 32 )
+        GPIO.out_w1ts = ((uint32_t)1 << pin);
+    else if ( pin < 34 )
+        GPIO.out1_w1ts.val = ((uint32_t)1 << (pin - 32));
+}
+
+static inline __attribute__((always_inline))
+void directModeInput(IO_REG_TYPE pin)
+{
+    if ( digitalPinIsValid(pin) )
+    {
+        uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
+
+        if ( rtc_reg ) // RTC pins PULL settings
+        {
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
+        }
+
+        if ( pin < 32 )
+            GPIO.enable_w1tc = ((uint32_t)1 << pin);
+        else
+            GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
+
+        uint32_t pinFunction((uint32_t)2 << FUN_DRV_S); // what are the drivers?
+        pinFunction |= FUN_IE; // input enable but required for output as well?
+        pinFunction |= ((uint32_t)2 << MCU_SEL_S);
+
+        ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = pinFunction;
+
+        GPIO.pin[pin].val = 0;
+    }
+}
+
+static inline __attribute__((always_inline))
+void directModeOutput(IO_REG_TYPE pin)
+{
+    if ( digitalPinIsValid(pin) && pin <= 33 ) // pins above 33 can be only inputs
+    {
+        uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
+
+        if ( rtc_reg ) // RTC pins PULL settings
+        {
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
+        }
+
+        if ( pin < 32 )
+            GPIO.enable_w1ts = ((uint32_t)1 << pin);
+        else // already validated to pins <= 33
+            GPIO.enable1_w1ts.val = ((uint32_t)1 << (pin - 32));
+
+        uint32_t pinFunction((uint32_t)2 << FUN_DRV_S); // what are the drivers?
+        pinFunction |= FUN_IE; // input enable but required for output as well?
+        pinFunction |= ((uint32_t)2 << MCU_SEL_S);
+
+        ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = pinFunction;
+
+        GPIO.pin[pin].val = 0;
+    }
+}
+
+#define DIRECT_READ(base, pin)          directRead(pin)
+#define DIRECT_WRITE_LOW(base, pin)     directWriteLow(pin)
+#define DIRECT_WRITE_HIGH(base, pin)    directWriteHigh(pin)
+#define DIRECT_MODE_INPUT(base, pin)    directModeInput(pin)
+#define DIRECT_MODE_OUTPUT(base, pin)   directModeOutput(pin)
+#warning "ESP32 OneWire testing"
+
 #elif defined(__SAMD21G18A__)
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
