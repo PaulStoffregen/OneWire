@@ -340,6 +340,64 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 #define DIRECT_WRITE_LOW(base, pin)	directWriteLow(base, pin)
 #define DIRECT_WRITE_HIGH(base, pin)	directWriteHigh(base, pin)
 
+#elif defined(__riscv)
+
+/*
+ * Tested on highfive1
+ *
+ * Stable results are achieved operating in the
+ * two high speed modes of the highfive1.  It
+ * seems to be less reliable in slow mode.
+ */
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             digitalPinToBitMask(pin)
+#define IO_REG_TYPE uint32_t
+#define IO_REG_ASM
+
+static inline __attribute__((always_inline))
+IO_REG_TYPE directRead(IO_REG_TYPE mask)
+{
+    return ((GPIO_REG(GPIO_INPUT_VAL) & mask) != 0) ? 1 : 0;
+}
+
+static inline __attribute__((always_inline))
+void directModeInput(IO_REG_TYPE mask)
+{
+    GPIO_REG(GPIO_OUTPUT_XOR)  &= ~mask;
+    GPIO_REG(GPIO_IOF_EN)      &= ~mask;
+
+    GPIO_REG(GPIO_INPUT_EN)  |=  mask;
+    GPIO_REG(GPIO_OUTPUT_EN) &= ~mask;
+}
+
+static inline __attribute__((always_inline))
+void directModeOutput(IO_REG_TYPE mask)
+{
+    GPIO_REG(GPIO_OUTPUT_XOR)  &= ~mask;
+    GPIO_REG(GPIO_IOF_EN)      &= ~mask;
+
+    GPIO_REG(GPIO_INPUT_EN)  &= ~mask;
+    GPIO_REG(GPIO_OUTPUT_EN) |=  mask;
+}
+
+static inline __attribute__((always_inline))
+void directWriteLow(IO_REG_TYPE mask)
+{
+    GPIO_REG(GPIO_OUTPUT_VAL) &= ~mask;
+}
+
+static inline __attribute__((always_inline))
+void directWriteHigh(IO_REG_TYPE mask)
+{
+    GPIO_REG(GPIO_OUTPUT_VAL) |= mask;
+}
+
+#define DIRECT_READ(base, mask)          directRead(mask)
+#define DIRECT_WRITE_LOW(base, mask)     directWriteLow(mask)
+#define DIRECT_WRITE_HIGH(base, mask)    directWriteHigh(mask)
+#define DIRECT_MODE_INPUT(base, mask)    directModeInput(mask)
+#define DIRECT_MODE_OUTPUT(base, mask)   directModeOutput(mask)
+
 #else
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
