@@ -161,8 +161,8 @@ OneWire::OneWire(uint8_t pin)
 //
 uint8_t OneWire::reset(void)
 {
-	IO_REG_TYPE mask = bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 	uint8_t r;
 	uint8_t retries = 125;
 
@@ -195,8 +195,8 @@ uint8_t OneWire::reset(void)
 //
 void OneWire::write_bit(uint8_t v)
 {
-	IO_REG_TYPE mask=bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 
 	if (v & 1) {
 		noInterrupts();
@@ -223,8 +223,8 @@ void OneWire::write_bit(uint8_t v)
 //
 uint8_t OneWire::read_bit(void)
 {
-	IO_REG_TYPE mask=bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 	uint8_t r;
 
 	noInterrupts();

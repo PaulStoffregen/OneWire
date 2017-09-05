@@ -62,7 +62,8 @@
 #define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint8_t
-#define IO_REG_ASM asm("r30")
+#define IO_REG_BASE_ATTR asm("r30")
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
@@ -73,7 +74,8 @@
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (1)
 #define IO_REG_TYPE uint8_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR __attribute__ ((unused))
 #define DIRECT_READ(base, mask)         (*((base)+512))
 #define DIRECT_MODE_INPUT(base, mask)   (*((base)+640) = 0)
 #define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+640) = 1)
@@ -84,7 +86,8 @@
 #define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint8_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         ((*((base)+16) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   (*((base)+20) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+20) |= (mask))
@@ -99,7 +102,8 @@
 #define PIN_TO_BASEREG(pin)             (&(digitalPinToPort(pin)->PIO_PER))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         (((*((base)+15)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+5)) = (mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+4)) = (mask))
@@ -116,7 +120,8 @@
 #define PIN_TO_BASEREG(pin)             (portModeRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         (((*(base+4)) & (mask)) ? 1 : 0)  //PORTX + 0x10
 #define DIRECT_MODE_INPUT(base, mask)   ((*(base+2)) = (mask))            //TRISXSET + 0x08
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*(base+1)) = (mask))            //TRISXCLR + 0x04
@@ -132,7 +137,8 @@
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1 << pin)
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         ((GPI & (mask)) ? 1 : 0)    //GPIO_IN_ADDRESS
 #define DIRECT_MODE_INPUT(base, mask)   (GPE &= ~(mask))            //GPIO_ENABLE_W1TC_ADDRESS
 #define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
@@ -144,7 +150,8 @@
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 
 static inline __attribute__((always_inline))
 IO_REG_TYPE directRead(IO_REG_TYPE pin)
@@ -242,7 +249,8 @@ void directModeOutput(IO_REG_TYPE pin)
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         (((*((base)+8)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) = (mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+2)) = (mask))
@@ -253,7 +261,8 @@ void directModeOutput(IO_REG_TYPE pin)
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, pin)          nrf_gpio_pin_read(pin)
 #define DIRECT_WRITE_LOW(base, pin)     nrf_gpio_pin_clear(pin)
 #define DIRECT_WRITE_HIGH(base, pin)    nrf_gpio_pin_set(pin)
@@ -278,7 +287,8 @@ void directModeOutput(IO_REG_TYPE pin)
 #define PIN_TO_BASEREG(pin)		((volatile uint32_t *)g_APinDescription[pin].ulGPIOBase)
 #define PIN_TO_BITMASK(pin)		pin
 #define IO_REG_TYPE			uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 
 static inline __attribute__((always_inline))
 IO_REG_TYPE directRead(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
@@ -352,7 +362,8 @@ void directWriteHigh(volatile IO_REG_TYPE *base, IO_REG_TYPE pin)
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             digitalPinToBitMask(pin)
 #define IO_REG_TYPE uint32_t
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 
 static inline __attribute__((always_inline))
 IO_REG_TYPE directRead(IO_REG_TYPE mask)
@@ -402,7 +413,8 @@ void directWriteHigh(IO_REG_TYPE mask)
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE unsigned int
-#define IO_REG_ASM
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, pin)          digitalRead(pin)
 #define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
 #define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
