@@ -197,24 +197,15 @@ void OneWire::write_bit(uint8_t v)
 {
 	IO_REG_TYPE mask=bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
-
-	if (v & 1) {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(55);
-	} else {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(5);
-	}
+	
+	noInterrupts();
+	DIRECT_WRITE_LOW(reg, mask);
+	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+	bool isOdd = v & 1;
+	delayMicroseconds(isOdd ? 10 : 65);
+	DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+	interrupts();
+	delayMicroseconds(isOdd ? 55 : 5);
 }
 
 //
