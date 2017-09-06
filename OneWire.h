@@ -65,7 +65,8 @@
 #define IO_REG_BASE_ATTR asm("r30")
 #define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
-#define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) &= ~(mask))
+// input with no internal pull-up
+#define DIRECT_MODE_INPUT(base, mask)   (((*((base)+1)) &= ~(mask)), DIRECT_WRITE_LOW(base, mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
 #define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
@@ -472,6 +473,22 @@ class OneWire
 
     // Read a bit.
     uint8_t read_bit(void);
+
+    // Touch a bit.
+    // 1-wire bus touching depends on a touched bit 'v' as follows:
+    //  0: writes 0 on the bus, there is no bus sampling in this case
+    //     (the function returns 0),
+    //  1: writes 1 on the bus and samples for response (this is equal to
+    //     reading a bit). The response is returned.
+    uint8_t touch_bit(uint8_t v) {
+        return ((v&1) ? read_bit() : (write_bit(0), 0));
+    }
+
+    // Touch a byte and return result.
+    uint8_t touch(uint8_t v);
+
+    // Touch an array of bytes. Result is passed back in the same buffer.
+    void touch_bytes(uint8_t *buf, uint16_t count);
 
     // Stop forcing power onto the bus. You only need to do this if
     // you used the 'power' flag to write() or used a write_bit() call
