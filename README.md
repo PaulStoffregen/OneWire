@@ -1,5 +1,5 @@
-** OneWire library
-  A modification of the Arduino OneWire library maintained by @PaulStoggregen.  This modifications supports the ESP32 under the Arduino Environment.
+# OneWire library
+  A modification of the Arduino OneWire library maintained by @PaulStoggregen.  This modifications supports the ESP32 under the Arduino-esp32 Environment.
   
   No changes are required for compatibility with Arduino coding.
 
