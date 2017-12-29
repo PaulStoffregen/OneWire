@@ -32,6 +32,10 @@ private email about OneWire).
 OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
+Version 2.3 ESP32 stickbreaker 28DEC2017
+  adjust to use portENTER_CRITICAL(&mux) instead of noInterrupts();
+  adjust to use portEXIT_CRITICAL(&mux) instead of Interrupts();
+
 Version 2.3:
   Unknown chip fallback mode, Roger Clark
   Teensy-LC compatibility, Paul Stoffregen
@@ -147,6 +151,10 @@ OneWire::OneWire(uint8_t pin)
 	pinMode(pin, INPUT);
 	bitmask = PIN_TO_BITMASK(pin);
 	baseReg = PIN_TO_BASEREG(pin);
+#ifdef ARDUINO_ARCH_ESP32
+  mux = portMUX_INITIALIZER_UNLOCKED;
+#endif
+
 #if ONEWIRE_SEARCH
 	reset_search();
 #endif
@@ -166,25 +174,49 @@ uint8_t OneWire::reset(void)
 	uint8_t r;
 	uint8_t retries = 125;
 
-	noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 	DIRECT_MODE_INPUT(reg, mask);
-	interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 	// wait until the wire is high... just in case
 	do {
 		if (--retries == 0) return 0;
 		delayMicroseconds(2);
 	} while ( !DIRECT_READ(reg, mask));
 
-	noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 	DIRECT_WRITE_LOW(reg, mask);
 	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-	interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 	delayMicroseconds(480);
-	noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
 	delayMicroseconds(70);
 	r = !DIRECT_READ(reg, mask);
-	interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 	delayMicroseconds(410);
 	return r;
 }
@@ -199,20 +231,36 @@ void OneWire::write_bit(uint8_t v)
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 
 	if (v & 1) {
-		noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(10);
 		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 		delayMicroseconds(55);
 	} else {
-		noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(65);
 		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 		delayMicroseconds(5);
 	}
 }
@@ -227,14 +275,22 @@ uint8_t OneWire::read_bit(void)
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 	uint8_t r;
 
-	noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 	DIRECT_MODE_OUTPUT(reg, mask);
 	DIRECT_WRITE_LOW(reg, mask);
 	delayMicroseconds(3);
 	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
 	delayMicroseconds(10);
 	r = DIRECT_READ(reg, mask);
-	interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 	delayMicroseconds(53);
 	return r;
 }
@@ -253,10 +309,18 @@ void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
 	OneWire::write_bit( (bitMask & v)?1:0);
     }
     if ( !power) {
-	noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 	DIRECT_MODE_INPUT(baseReg, bitmask);
 	DIRECT_WRITE_LOW(baseReg, bitmask);
-	interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
     }
 }
 
@@ -264,10 +328,18 @@ void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 
   for (uint16_t i = 0 ; i < count ; i++)
     write(buf[i]);
   if (!power) {
-    noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
     DIRECT_MODE_INPUT(baseReg, bitmask);
     DIRECT_WRITE_LOW(baseReg, bitmask);
-    interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
   }
 }
 
@@ -311,9 +383,17 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
-	noInterrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portENTER_CRITICAL(&mux);
+#else
+  noInterrupts();
+#endif
 	DIRECT_MODE_INPUT(baseReg, bitmask);
-	interrupts();
+#ifdef ARDUINO_ARCH_ESP32
+  portEXIT_CRITICAL(&mux);
+#else
+  interrupts();
+#endif
 }
 
 #if ONEWIRE_SEARCH

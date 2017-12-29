@@ -430,6 +430,9 @@ class OneWire
   private:
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
+#ifdef ARDUINO_ARCH_ESP32
+    portMUX_TYPE mux;
+#endif
 
 #if ONEWIRE_SEARCH
     // global search state
