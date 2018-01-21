@@ -140,6 +140,7 @@ sample code bearing this copyright.
 */
 
 #include "OneWire.h"
+#include "util/OneWire_direct_gpio.h"
 
 
 OneWire::OneWire(uint8_t pin)
