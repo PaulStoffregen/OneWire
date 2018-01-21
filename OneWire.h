@@ -189,5 +189,9 @@ class OneWire
 #undef DIRECT_MODE_OUTPUT
 #undef DIRECT_WRITE_LOW
 #undef DIRECT_WRITE_HIGH
+#ifdef ARDUINO_ARCH_ESP32
+  #undef noInterrupts()
+  #undef interrupts()
+#endif
 
 #endif
