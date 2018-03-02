@@ -140,7 +140,6 @@ sample code bearing this copyright.
 */
 
 #include "OneWire.h"
-#include "util/OneWire_direct_gpio.h"
 
 
 OneWire::OneWire(uint8_t pin)
@@ -327,7 +326,7 @@ void OneWire::reset_search()
 {
   // reset the search state
   LastDiscrepancy = 0;
-  LastDeviceFlag = FALSE;
+  LastDeviceFlag = false;
   LastFamilyDiscrepancy = 0;
   for(int i = 7; ; i--) {
     ROM_NO[i] = 0;
@@ -346,7 +345,7 @@ void OneWire::target_search(uint8_t family_code)
       ROM_NO[i] = 0;
    LastDiscrepancy = 64;
    LastFamilyDiscrepancy = 0;
-   LastDeviceFlag = FALSE;
+   LastDeviceFlag = false;
 }
 
 //
@@ -362,8 +361,8 @@ void OneWire::target_search(uint8_t family_code)
 //--------------------------------------------------------------------------
 // Perform the 1-Wire Search Algorithm on the 1-Wire bus using the existing
 // search state.
-// Return TRUE  : device found, ROM number in ROM_NO buffer
-//        FALSE : device not found, end of search
+// Return true  : device found, ROM number in ROM_NO buffer
+//        false : device not found, end of search
 //
 uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 {
@@ -388,9 +387,9 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
       {
          // reset the search
          LastDiscrepancy = 0;
-         LastDeviceFlag = FALSE;
+         LastDeviceFlag = false;
          LastFamilyDiscrepancy = 0;
-         return FALSE;
+         return false;
       }
 
       // issue the search command
@@ -469,9 +468,9 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 
          // check for last device
          if (LastDiscrepancy == 0)
-            LastDeviceFlag = TRUE;
+            LastDeviceFlag = true;
 
-         search_result = TRUE;
+         search_result = true;
       }
    }
 
@@ -479,9 +478,9 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
    if (!search_result || !ROM_NO[0])
    {
       LastDiscrepancy = 0;
-      LastDeviceFlag = FALSE;
+      LastDeviceFlag = false;
       LastFamilyDiscrepancy = 0;
-      search_result = FALSE;
+      search_result = false;
    } else {
       for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    }
