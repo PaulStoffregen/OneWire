@@ -64,9 +64,9 @@ http://www.pjrc.com/teensy/td_libs_OneWire.html
   Search fix from Robin James
     http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1238032295/27#27
   Use direct optimized I/O in all cases
-  Disable interrupts during timing critical sections
+  Disable CS_END during timing critical sections
     (this solves many random communication errors)
-  Disable interrupts during read-modify-write I/O
+  Disable CS_END during read-modify-write I/O
   Reduce RAM consumption by eliminating unnecessary
     variables and trimming many to 8 bits
   Optimize both crc8 - table version moved to flash
@@ -167,25 +167,25 @@ uint8_t OneWire::reset(void)
 	uint8_t r;
 	uint8_t retries = 125;
 
-	noInterrupts();
+	CS_START();
 	DIRECT_MODE_INPUT(reg, mask);
-	interrupts();
+	CS_END();
 	// wait until the wire is high... just in case
 	do {
 		if (--retries == 0) return 0;
 		delayMicroseconds(2);
 	} while ( !DIRECT_READ(reg, mask));
 
-	noInterrupts();
+	CS_START();
 	DIRECT_WRITE_LOW(reg, mask);
 	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-	interrupts();
+	CS_END();
 	delayMicroseconds(480);
-	noInterrupts();
+	CS_START();
 	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
 	delayMicroseconds(70);
 	r = !DIRECT_READ(reg, mask);
-	interrupts();
+	CS_END();
 	delayMicroseconds(410);
 	return r;
 }
@@ -200,20 +200,20 @@ void OneWire::write_bit(uint8_t v)
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 
 	if (v & 1) {
-		noInterrupts();
+		CS_START();
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(10);
 		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
+		CS_END();
 		delayMicroseconds(55);
 	} else {
-		noInterrupts();
+		CS_START();
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(65);
 		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
+		CS_END();
 		delayMicroseconds(5);
 	}
 }
@@ -228,14 +228,14 @@ uint8_t OneWire::read_bit(void)
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 	uint8_t r;
 
-	noInterrupts();
+	CS_START();
 	DIRECT_MODE_OUTPUT(reg, mask);
 	DIRECT_WRITE_LOW(reg, mask);
 	delayMicroseconds(3);
 	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
 	delayMicroseconds(10);
 	r = DIRECT_READ(reg, mask);
-	interrupts();
+	CS_END();
 	delayMicroseconds(53);
 	return r;
 }
@@ -254,10 +254,10 @@ void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
 	OneWire::write_bit( (bitMask & v)?1:0);
     }
     if ( !power) {
-	noInterrupts();
+	CS_START();
 	DIRECT_MODE_INPUT(baseReg, bitmask);
 	DIRECT_WRITE_LOW(baseReg, bitmask);
-	interrupts();
+	CS_END();
     }
 }
 
@@ -265,10 +265,10 @@ void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 
   for (uint16_t i = 0 ; i < count ; i++)
     write(buf[i]);
   if (!power) {
-    noInterrupts();
+    CS_START();
     DIRECT_MODE_INPUT(baseReg, bitmask);
     DIRECT_WRITE_LOW(baseReg, bitmask);
-    interrupts();
+    CS_END();
   }
 }
 
@@ -312,9 +312,9 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
-	noInterrupts();
+	CS_START();
 	DIRECT_MODE_INPUT(baseReg, bitmask);
-	interrupts();
+	CS_END();
 }
 
 #if ONEWIRE_SEARCH

@@ -10,6 +10,10 @@
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
+// Generic defaults
+#define CS_START()                      noInterrupts();
+#define CS_END()                        interrupts();
+
 // Platform specific I/O definitions
 
 #if defined(__AVR__)
@@ -113,10 +117,10 @@
 #define DIRECT_WRITE_HIGH(base, mask)    (base ? (GPIO.out_w1ts = (mask)) : (GPIO.out1_w1ts.val = (mask)))
 // https://github.com/PaulStoffregen/OneWire/pull/47
 // https://github.com/stickbreaker/OneWire/commit/6eb7fc1c11a15b6ac8c60e5671cf36eb6829f82c
-#undef noInterrupts
-#undef interrupts
-#define noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
-#define interrupts() portEXIT_CRITICAL(&mux);}
+#undef CS_START
+#undef CS_END
+#define CS_START()                       {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
+#define CS_END()                         portEXIT_CRITICAL(&mux);}
 #warning "ESP32 OneWire testing"
 
 #elif defined(__SAMD21G18A__)

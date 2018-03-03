@@ -178,7 +178,6 @@ class OneWire
 
 // Undefine macros from OneWire_direct_gpio.h
 // Do not allow these to "leak" into Arduino sketches and other libraries
-/*
 #undef OneWire_Direct_GPIO_h
 #undef PIN_TO_BASEREG
 #undef PIN_TO_BITMASK
@@ -190,9 +189,6 @@ class OneWire
 #undef DIRECT_MODE_OUTPUT
 #undef DIRECT_WRITE_LOW
 #undef DIRECT_WRITE_HIGH
-#ifdef ARDUINO_ARCH_ESP32
-  #undef noInterrupts()
-  #undef interrupts()
-#endif
-*/
+#undef CS_START
+#undef CS_END
 #endif
