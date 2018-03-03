@@ -64,9 +64,9 @@ http://www.pjrc.com/teensy/td_libs_OneWire.html
   Search fix from Robin James
     http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1238032295/27#27
   Use direct optimized I/O in all cases
-  Disable CS_END during timing critical sections
+  Disable interrupts during timing critical sections
     (this solves many random communication errors)
-  Disable CS_END during read-modify-write I/O
+  Disable interrupts during read-modify-write I/O
   Reduce RAM consumption by eliminating unnecessary
     variables and trimming many to 8 bits
   Optimize both crc8 - table version moved to flash
