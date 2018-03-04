@@ -142,6 +142,7 @@ sample code bearing this copyright.
 #include "OneWire.h"
 #include "util/OneWire_direct_gpio.h"
 
+OneWire::OneWire() {}
 
 OneWire::OneWire(uint8_t pin)
 {
@@ -150,6 +151,17 @@ OneWire::OneWire(uint8_t pin)
 	baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
 	reset_search();
+#endif
+}
+
+// Add regular function to change pin
+void OneWire::apin(uint8_t pin)
+{
+  pinMode(pin, INPUT);
+  bitmask = PIN_TO_BITMASK(5);
+  baseReg = PIN_TO_BASEREG(5);
+#if ONEWIRE_SEARCH
+ reset_search();
 #endif
 }
 
