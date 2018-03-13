@@ -1,5 +1,4 @@
-#ifndef OneWire_h
-#define OneWire_h
+#pragma once
 
 #include <inttypes.h>
 
@@ -14,6 +13,9 @@
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
+// Board-specific macros for direct GPIO
+#include "util/OneWire_direct_gpio.h"
+
 // You can exclude certain features from OneWire.  In theory, this
 // might save some space.  In practice, the compiler automatically
 // removes unused code (technically, the linker, using -fdata-sections
@@ -25,39 +27,22 @@
 // or a small but slow algorithm.
 
 // you can exclude onewire_search by defining that to 0
-#ifndef ONEWIRE_SEARCH
 #define ONEWIRE_SEARCH 1
-#endif
 
 // You can exclude CRC checks altogether by defining this to 0
-#ifndef ONEWIRE_CRC
 #define ONEWIRE_CRC 1
-#endif
 
 // Select the table-lookup method of computing the 8-bit CRC
 // by setting this to 1.  The lookup table enlarges code size by
 // about 250 bytes.  It does NOT consume RAM (but did in very
 // old versions of OneWire).  If you disable this, a slower
 // but very compact algorithm is used.
-#ifndef ONEWIRE_CRC8_TABLE
 #define ONEWIRE_CRC8_TABLE 1
-#endif
 
 // You can allow 16-bit CRC checks by defining this to 1
 // (Note that ONEWIRE_CRC must also be 1.)
-#ifndef ONEWIRE_CRC16
 #define ONEWIRE_CRC16 1
-#endif
 
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE  1
-#endif
-
-// Board-specific macros for direct GPIO
-#include "util/OneWire_direct_gpio.h"
 
 class OneWire
 {
@@ -176,22 +161,3 @@ class OneWire
 #endif
 };
 
-// Undefine macros from OneWire_direct_gpio.h
-// Do not allow these to "leak" into Arduino sketches and other libraries
-#undef OneWire_Direct_GPIO_h
-#undef PIN_TO_BASEREG
-#undef PIN_TO_BITMASK
-#undef IO_REG_TYPE
-#undef IO_REG_BASE_ATTR
-#undef IO_REG_MASK_ATTR
-#undef DIRECT_READ
-#undef DIRECT_MODE_INPUT
-#undef DIRECT_MODE_OUTPUT
-#undef DIRECT_WRITE_LOW
-#undef DIRECT_WRITE_HIGH
-#ifdef ARDUINO_ARCH_ESP32
-  #undef noInterrupts()
-  #undef interrupts()
-#endif
-
-#endif
