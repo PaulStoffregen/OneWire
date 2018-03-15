@@ -1,14 +1,11 @@
 #ifndef OneWire_Direct_GPIO_h
 #define OneWire_Direct_GPIO_h
 
-#include <inttypes.h>
+// This header should ONLY be included by OneWire.cpp.  These defines are
+// meant to be private, used within OneWire.cpp, but not exposed to Arduino
+// sketches or other libraries which may include OneWire.h.
 
-#if ARDUINO >= 100
-#include "Arduino.h"       // for delayMicroseconds, digitalPinToBitMask, etc
-#else
-#include "WProgram.h"      // for delayMicroseconds
-#include "pins_arduino.h"  // for digitalPinToBitMask, etc
-#endif
+#include <stdint.h>
 
 // Platform specific I/O definitions
 
@@ -199,9 +196,15 @@ void directModeOutput(IO_REG_TYPE pin)
 #define DIRECT_MODE_OUTPUT(base, pin)   directModeOutput(pin)
 // https://github.com/PaulStoffregen/OneWire/pull/47
 // https://github.com/stickbreaker/OneWire/commit/6eb7fc1c11a15b6ac8c60e5671cf36eb6829f82c
+#ifdef  interrupts
+#undef  interrupts
+#endif
+#ifdef  noInterrupts
+#undef  noInterrupts
+#endif
 #define noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
 #define interrupts() portEXIT_CRITICAL(&mux);}
-#warning "ESP32 OneWire testing"
+//#warning "ESP32 OneWire testing"
 
 #elif defined(__SAMD21G18A__)
 #define PIN_TO_BASEREG(pin)             portModeRegister(digitalPinToPort(pin))

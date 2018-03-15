@@ -1,14 +1,16 @@
 #ifndef OneWire_h
 #define OneWire_h
 
-#include <inttypes.h>
+#ifdef __cplusplus
+
+#include <stdint.h>
 
 #if defined(__AVR__)
 #include <util/crc16.h>
 #endif
 
 #if ARDUINO >= 100
-#include "Arduino.h"       // for delayMicroseconds, digitalPinToBitMask, etc
+#include <Arduino.h>       // for delayMicroseconds, digitalPinToBitMask, etc
 #else
 #include "WProgram.h"      // for delayMicroseconds
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
@@ -57,7 +59,7 @@
 #endif
 
 // Board-specific macros for direct GPIO
-#include "util/OneWire_direct_gpio.h"
+#include "util/OneWire_direct_regtype.h"
 
 class OneWire
 {
@@ -176,22 +178,10 @@ class OneWire
 #endif
 };
 
-// Undefine macros from OneWire_direct_gpio.h
-// Do not allow these to "leak" into Arduino sketches and other libraries
-#undef OneWire_Direct_GPIO_h
-#undef PIN_TO_BASEREG
-#undef PIN_TO_BITMASK
+// Prevent this name from leaking into Arduino sketches
+#ifdef IO_REG_TYPE
 #undef IO_REG_TYPE
-#undef IO_REG_BASE_ATTR
-#undef IO_REG_MASK_ATTR
-#undef DIRECT_READ
-#undef DIRECT_MODE_INPUT
-#undef DIRECT_MODE_OUTPUT
-#undef DIRECT_WRITE_LOW
-#undef DIRECT_WRITE_HIGH
-#ifdef ARDUINO_ARCH_ESP32
-  #undef noInterrupts()
-  #undef interrupts()
 #endif
 
-#endif
+#endif // __cplusplus
+#endif // OneWire_h

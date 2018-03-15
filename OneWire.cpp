@@ -139,6 +139,7 @@ sample code bearing this copyright.
 //--------------------------------------------------------------------------
 */
 
+#include <Arduino.h>
 #include "OneWire.h"
 #include "util/OneWire_direct_gpio.h"
 
