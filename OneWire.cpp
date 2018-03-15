@@ -144,7 +144,7 @@ sample code bearing this copyright.
 #include "util/OneWire_direct_gpio.h"
 
 
-OneWire::OneWire(uint8_t pin)
+void OneWire::begin(uint8_t pin)
 {
 	pinMode(pin, INPUT);
 	bitmask = PIN_TO_BITMASK(pin);
