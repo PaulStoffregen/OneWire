@@ -51,13 +51,6 @@
 #define ONEWIRE_CRC16 1
 #endif
 
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE  1
-#endif
-
 // Board-specific macros for direct GPIO
 #include "util/OneWire_direct_regtype.h"
 
@@ -72,7 +65,7 @@ class OneWire
     unsigned char ROM_NO[8];
     uint8_t LastDiscrepancy;
     uint8_t LastFamilyDiscrepancy;
-    uint8_t LastDeviceFlag;
+    bool LastDeviceFlag;
 #endif
 
   public:
@@ -130,7 +123,7 @@ class OneWire
     // might be a good idea to check the CRC to make sure you didn't
     // get garbage.  The order is deterministic. You will always get
     // the same devices in the same order.
-    uint8_t search(uint8_t *newAddr, bool search_mode = true);
+    bool search(uint8_t *newAddr, bool search_mode = true);
 #endif
 
 #if ONEWIRE_CRC

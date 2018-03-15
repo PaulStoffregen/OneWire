@@ -328,7 +328,7 @@ void OneWire::reset_search()
 {
   // reset the search state
   LastDiscrepancy = 0;
-  LastDeviceFlag = FALSE;
+  LastDeviceFlag = false;
   LastFamilyDiscrepancy = 0;
   for(int i = 7; ; i--) {
     ROM_NO[i] = 0;
@@ -347,7 +347,7 @@ void OneWire::target_search(uint8_t family_code)
       ROM_NO[i] = 0;
    LastDiscrepancy = 64;
    LastFamilyDiscrepancy = 0;
-   LastDeviceFlag = FALSE;
+   LastDeviceFlag = false;
 }
 
 //
@@ -366,10 +366,11 @@ void OneWire::target_search(uint8_t family_code)
 // Return TRUE  : device found, ROM number in ROM_NO buffer
 //        FALSE : device not found, end of search
 //
-uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
+bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 {
    uint8_t id_bit_number;
-   uint8_t last_zero, rom_byte_number, search_result;
+   uint8_t last_zero, rom_byte_number;
+   bool    search_result;
    uint8_t id_bit, cmp_id_bit;
 
    unsigned char rom_byte_mask, search_direction;
@@ -379,19 +380,17 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
    last_zero = 0;
    rom_byte_number = 0;
    rom_byte_mask = 1;
-   search_result = 0;
+   search_result = false;
 
    // if the last call was not the last one
-   if (!LastDeviceFlag)
-   {
+   if (!LastDeviceFlag) {
       // 1-Wire reset
-      if (!reset())
-      {
+      if (!reset()) {
          // reset the search
          LastDiscrepancy = 0;
-         LastDeviceFlag = FALSE;
+         LastDeviceFlag = false;
          LastFamilyDiscrepancy = 0;
-         return FALSE;
+         return false;
       }
 
       // issue the search command
@@ -409,26 +408,23 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
          cmp_id_bit = read_bit();
 
          // check for no devices on 1-wire
-         if ((id_bit == 1) && (cmp_id_bit == 1))
+         if ((id_bit == 1) && (cmp_id_bit == 1)) {
             break;
-         else
-         {
+         } else {
             // all devices coupled have 0 or 1
-            if (id_bit != cmp_id_bit)
+            if (id_bit != cmp_id_bit) {
                search_direction = id_bit;  // bit write value for search
-            else
-            {
+            } else {
                // if this discrepancy if before the Last Discrepancy
                // on a previous next then pick the same as last time
-               if (id_bit_number < LastDiscrepancy)
+               if (id_bit_number < LastDiscrepancy) {
                   search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
-               else
+               } else {
                   // if equal to last pick 1, if not then pick 0
                   search_direction = (id_bit_number == LastDiscrepancy);
-
+               }
                // if 0 was picked then record its position in LastZero
-               if (search_direction == 0)
-               {
+               if (search_direction == 0) {
                   last_zero = id_bit_number;
 
                   // check for Last discrepancy in family
@@ -453,8 +449,7 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
             rom_byte_mask <<= 1;
 
             // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
-            if (rom_byte_mask == 0)
-            {
+            if (rom_byte_mask == 0) {
                 rom_byte_number++;
                 rom_byte_mask = 1;
             }
@@ -463,26 +458,24 @@ uint8_t OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
       while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
 
       // if the search was successful then
-      if (!(id_bit_number < 65))
-      {
+      if (!(id_bit_number < 65)) {
          // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
          LastDiscrepancy = last_zero;
 
          // check for last device
-         if (LastDiscrepancy == 0)
-            LastDeviceFlag = TRUE;
-
-         search_result = TRUE;
+         if (LastDiscrepancy == 0) {
+            LastDeviceFlag = true;
+         }
+         search_result = true;
       }
    }
 
    // if no device found then reset counters so next 'search' will be like a first
-   if (!search_result || !ROM_NO[0])
-   {
+   if (!search_result || !ROM_NO[0]) {
       LastDiscrepancy = 0;
-      LastDeviceFlag = FALSE;
+      LastDeviceFlag = false;
       LastFamilyDiscrepancy = 0;
-      search_result = FALSE;
+      search_result = false;
    } else {
       for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    }
