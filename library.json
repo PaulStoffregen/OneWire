@@ -46,13 +46,16 @@
         },
         {
             "name": "Scott Roberts"
+        },
+        {
+            "name": "Stefano Raffaglio"
         }
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/PaulStoffregen/OneWire"
+        "url": "https://github.com/sraff/OneWire"
     },
-    "version": "2.3.4",
+    "version": "2.4",
     "homepage": "https://www.pjrc.com/teensy/td_libs_OneWire.html",
     "frameworks": "Arduino",
     "examples": [

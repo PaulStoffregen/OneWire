@@ -32,6 +32,9 @@ private email about OneWire).
 OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
+Version 2.4:
+  Add DS2482 support, Stefano Raffaglio
+
 Version 2.3:
   Unknown chip fallback mode, Roger Clark
   Teensy-LC compatibility, Paul Stoffregen
@@ -140,20 +143,55 @@ sample code bearing this copyright.
 */
 
 #include <Arduino.h>
-#include "OneWire.h"
+#include <Wire.h>
+#include <OneWire.h>
 #include "util/OneWire_direct_gpio.h"
 
-
-void OneWire::begin(uint8_t pin)
+// Constructor with for DS2482 and specified address
+// address should be 0x18 | address -> 0x18 if AD1=AD0=0
+OneWire::OneWire(uint8_t pin, bool ds2482)
 {
-	pinMode(pin, INPUT);
-	bitmask = PIN_TO_BITMASK(pin);
-	baseReg = PIN_TO_BASEREG(pin);
+	if (ds2482) { 
+		// Address is determined by two pins on the DS2482 AD1/AD0
+		// Pass 0b00, 0b01, 0b10 or 0b11
+		Wire.begin(); // init wire lib
+  		deviceReset();
+  		writeConfig(DS2482_CONFIG_SPU|DS2482_CONFIG_APU); // enable active pullup
+	}
+	else { // input is the Digital pin address
+		pinMode(pin, INPUT);
+		bitmask = PIN_TO_BITMASK(pin);
+		baseReg = PIN_TO_BASEREG(pin);
+	}
+	mAddress = pin;
+	mError = 0;
+	ds2482present = ds2482;
 #if ONEWIRE_SEARCH
 	reset_search();
 #endif
 }
 
+uint8_t OneWire::getAddress()
+{
+	return mAddress;
+}
+uint8_t OneWire::getError()
+{
+	return mError;
+}
+// Helper functions to make dealing with I2C side easier
+void OneWire::begin()
+{
+	Wire.beginTransmission(mAddress);
+}
+uint8_t OneWire::end()
+{
+	return Wire.endTransmission();
+}
+void OneWire::writeByte(uint8_t data)
+{
+	Wire.write(data); 
+}
 
 // Perform the onewire reset function.  We will wait up to 250uS for
 // the bus to come high, if it doesn't then it is broken or shorted
@@ -163,32 +201,197 @@ void OneWire::begin(uint8_t pin)
 //
 uint8_t OneWire::reset(void)
 {
-	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
-	uint8_t r;
-	uint8_t retries = 125;
+	if (ds2482present) {	
+		return wireReset();
+	} else {
+		IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+		volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+		uint8_t r;
+		uint8_t retries = 125;
 
-	noInterrupts();
-	DIRECT_MODE_INPUT(reg, mask);
-	interrupts();
-	// wait until the wire is high... just in case
-	do {
-		if (--retries == 0) return 0;
-		delayMicroseconds(2);
-	} while ( !DIRECT_READ(reg, mask));
+		noInterrupts();
+		DIRECT_MODE_INPUT(reg, mask);
+		interrupts();
+		// wait until the wire is high... just in case
+		do {
+			if (--retries == 0) return 0;
+			delayMicroseconds(2);
+		} while ( !DIRECT_READ(reg, mask));
 
-	noInterrupts();
-	DIRECT_WRITE_LOW(reg, mask);
-	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-	interrupts();
-	delayMicroseconds(480);
-	noInterrupts();
-	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
-	delayMicroseconds(70);
-	r = !DIRECT_READ(reg, mask);
-	interrupts();
-	delayMicroseconds(410);
-	return r;
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		interrupts();
+		delayMicroseconds(480);
+		noInterrupts();
+		DIRECT_MODE_INPUT(reg, mask);	// allow it to float
+		delayMicroseconds(70);
+		r = !DIRECT_READ(reg, mask);
+		interrupts();
+		delayMicroseconds(410);
+		return r;
+	}
+}
+
+uint8_t OneWire::readByte()
+{
+	Wire.requestFrom(mAddress,1u);
+	return Wire.read();
+}
+
+// Simply starts and ends an Wire transmission
+// If no devices are present, this returns false
+uint8_t OneWire::checkPresence()
+{
+	begin();
+	return !end() ? true : false;
+}
+
+// Performs a global reset of device state machine logic. Terminates any ongoing 1-Wire communication.
+void OneWire::deviceReset()
+{
+	begin();
+	write(DS2482_COMMAND_RESET);
+	end();
+}
+
+// Sets the read pointer to the specified register. Overwrites the read pointer position of any 1-Wire communication command in progress.
+void OneWire::setReadPointer(uint8_t readPointer)
+{
+	begin();
+	writeByte(DS2482_COMMAND_SRP);
+	writeByte(readPointer);
+	end();
+}
+
+// Read the status register
+uint8_t OneWire::readStatus()
+{
+	setReadPointer(DS2482_POINTER_STATUS);
+	return readByte();
+}
+
+// Read the data register
+uint8_t OneWire::readData()
+{
+	setReadPointer(DS2482_POINTER_DATA);
+	return readByte();
+}
+
+// Read the config register
+uint8_t OneWire::readConfig()
+{
+	setReadPointer(DS2482_POINTER_CONFIG);
+	return readByte();
+}
+
+void OneWire::setStrongPullup()
+{
+	writeConfig(readConfig() | DS2482_CONFIG_SPU);
+}
+void OneWire::clearStrongPullup()
+{
+	writeConfig(readConfig() & ~DS2482_CONFIG_SPU);
+}
+// Churn until the busy bit in the status register is clear
+uint8_t OneWire::waitOnBusy()
+{
+	uint8_t status;
+	for(int i=1000; i>0; i--)
+	{
+		status = readStatus();
+		if (!(status & DS2482_STATUS_BUSY))
+			break;
+		delayMicroseconds(20);
+	}
+	// if we have reached this point and we are still busy, there is an error
+	if (status & DS2482_STATUS_BUSY)
+		mError = DS2482_ERROR_TIMEOUT;
+
+	// Return the status so we don't need to explicitly do it again
+	return status;
+}
+// Write to the config register
+void OneWire::writeConfig(uint8_t config)
+{
+	waitOnBusy();
+	begin();
+	writeByte(DS2482_COMMAND_WRITECONFIG);
+	// Write the 4 bits and the complement 4 bits
+	writeByte(config | (~config)<<4);
+	end();
+	
+	// This should return the config bits without the complement
+	if (readByte() != config)
+		mError = DS2482_ERROR_CONFIG;
+}
+
+// Generates a 1-Wire reset/presence-detect cycle (Figure 4) at the 1-Wire line. The state
+// of the 1-Wire line is sampled at tSI and tMSP and the result is reported to the host 
+// processor through the Status Register, bits PPD and SD.
+uint8_t OneWire::wireReset()
+{
+	waitOnBusy();
+	
+	// Datasheet warns that reset with SPU set can exceed max ratings
+	clearStrongPullup();
+
+	waitOnBusy();
+
+	begin();
+	writeByte(DS2482_COMMAND_RESETWIRE);
+	end();
+
+	uint8_t status = waitOnBusy();
+
+	if (status & DS2482_STATUS_SD)
+	{
+		mError = DS2482_ERROR_SHORT;
+	}
+	return (status & DS2482_STATUS_PPD) ? true : false;
+}
+
+// Writes a single data byte to the 1-Wire line.
+void OneWire::wireWriteByte(uint8_t data, uint8_t power)
+{
+	waitOnBusy();
+	if (power)
+		setStrongPullup();
+	begin();
+	writeByte(DS2482_COMMAND_WRITEBYTE);
+	writeByte(data);
+	end();
+}
+// Generates eight read-data time slots on the 1-Wire line and stores result in the Read Data Register.
+uint8_t OneWire::wireReadByte()
+{
+	waitOnBusy();
+	begin();
+	writeByte(DS2482_COMMAND_READBYTE);
+	end();
+	waitOnBusy();
+	return readData();
+}
+// Generates a single 1-Wire time slot with a bit value �V� as specified by the bit byte at the 1-Wire line
+// (see Table 2). A V value of 0b generates a write-zero time slot (Figure 5); a V value of 1b generates a 
+// write-one time slot, which also functions as a read-data time slot (Figure 6). In either case, the logic
+// level at the 1-Wire line is tested at tMSR and SBR is updated.
+void OneWire::wireWriteBit(uint8_t data, uint8_t power)
+{
+	waitOnBusy();
+	if (power)
+		setStrongPullup();
+	begin();
+	writeByte(DS2482_COMMAND_SINGLEBIT);
+	writeByte(data ? 0x80 : 0x00);
+	end();
+}
+// As wireWriteBit
+uint8_t OneWire::wireReadBit()
+{
+	wireWriteBit(1);
+	uint8_t status = waitOnBusy();
+	return status & DS2482_STATUS_SBR ? 1 : 0;
 }
 
 //
@@ -197,25 +400,29 @@ uint8_t OneWire::reset(void)
 //
 void OneWire::write_bit(uint8_t v)
 {
-	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
-
-	if (v & 1) {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(55);
+	if (ds2482present) {	
+		wireWriteBit(v);
 	} else {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(5);
+		IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+		volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+
+		if (v & 1) {
+			noInterrupts();
+			DIRECT_WRITE_LOW(reg, mask);
+			DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+			delayMicroseconds(10);
+			DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+			interrupts();
+			delayMicroseconds(55);
+		} else {
+			noInterrupts();
+			DIRECT_WRITE_LOW(reg, mask);
+			DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+			delayMicroseconds(65);
+			DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+			interrupts();
+			delayMicroseconds(5);
+		}
 	}
 }
 
@@ -225,20 +432,24 @@ void OneWire::write_bit(uint8_t v)
 //
 uint8_t OneWire::read_bit(void)
 {
-	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
-	uint8_t r;
+	if (ds2482present) {
+		return wireReadBit();
+	} else {
+		IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+		volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+		uint8_t r;
 
-	noInterrupts();
-	DIRECT_MODE_OUTPUT(reg, mask);
-	DIRECT_WRITE_LOW(reg, mask);
-	delayMicroseconds(3);
-	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
-	delayMicroseconds(10);
-	r = DIRECT_READ(reg, mask);
-	interrupts();
-	delayMicroseconds(53);
-	return r;
+		noInterrupts();
+		DIRECT_MODE_OUTPUT(reg, mask);
+		DIRECT_WRITE_LOW(reg, mask);
+		delayMicroseconds(3);
+		DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
+		delayMicroseconds(10);
+		r = DIRECT_READ(reg, mask);
+		interrupts();
+		delayMicroseconds(53);
+		return r;
+	}	
 }
 
 //
@@ -248,42 +459,44 @@ uint8_t OneWire::read_bit(void)
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
-    uint8_t bitMask;
+void OneWire::write(uint8_t v, bool power /* = 0 */) {
+	if (ds2482present) {
+		wireWriteByte(v, power);	
+	} else {
+    	uint8_t bitMask;
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	OneWire::write_bit( (bitMask & v)?1:0);
-    }
-    if ( !power) {
-	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	DIRECT_WRITE_LOW(baseReg, bitmask);
-	interrupts();
+    	for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+			OneWire::write_bit( (bitMask & v)?1:0);
+    	}
+    	if ( !power) {
+			noInterrupts();
+			DIRECT_MODE_INPUT(baseReg, bitmask);
+			DIRECT_WRITE_LOW(baseReg, bitmask);
+			interrupts();
+    	}
     }
 }
 
 void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
   for (uint16_t i = 0 ; i < count ; i++)
-    write(buf[i]);
-  if (!power) {
-    noInterrupts();
-    DIRECT_MODE_INPUT(baseReg, bitmask);
-    DIRECT_WRITE_LOW(baseReg, bitmask);
-    interrupts();
-  }
+    write(buf[i], power);
 }
 
 //
 // Read a byte
 //
 uint8_t OneWire::read() {
-    uint8_t bitMask;
-    uint8_t r = 0;
+	if (ds2482present) {
+		return wireReadByte();
+	} else {
+    	uint8_t bitMask;
+    	uint8_t r = 0;
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	if ( OneWire::read_bit()) r |= bitMask;
-    }
-    return r;
+    	for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+			if ( OneWire::read_bit()) r |= bitMask;
+    	}
+    	return r;
+	}
 }
 
 void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
@@ -296,11 +509,9 @@ void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
 //
 void OneWire::select(const uint8_t rom[8])
 {
-    uint8_t i;
-
-    write(0x55);           // Choose ROM
-
-    for (i = 0; i < 8; i++) write(rom[i]);
+	uint8_t i;
+	write(WIRE_COMMAND_SELECT);           // Choose ROM
+	for (i = 0; i < 8; i++) write(rom[i]);
 }
 
 //
@@ -308,7 +519,7 @@ void OneWire::select(const uint8_t rom[8])
 //
 void OneWire::skip()
 {
-    write(0xCC);           // Skip ROM
+	write(WIRE_COMMAND_SKIP);           // Skip ROM
 }
 
 void OneWire::depower()
@@ -326,14 +537,14 @@ void OneWire::depower()
 //
 void OneWire::reset_search()
 {
-  // reset the search state
-  LastDiscrepancy = 0;
-  LastDeviceFlag = false;
-  LastFamilyDiscrepancy = 0;
-  for(int i = 7; ; i--) {
-    ROM_NO[i] = 0;
-    if ( i == 0) break;
-  }
+	// reset the search state
+  	LastDiscrepancy = 0;
+  	LastDeviceFlag = false;
+	LastFamilyDiscrepancy = 0;
+  	for(int i = 7; ; i--) {
+    	ROM_NO[i] = 0;
+    	if ( i == 0) break;
+	}
 }
 
 // Setup the search to find the device type 'family_code' on the next call
@@ -368,119 +579,119 @@ void OneWire::target_search(uint8_t family_code)
 //
 bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
 {
-   uint8_t id_bit_number;
-   uint8_t last_zero, rom_byte_number;
-   bool    search_result;
-   uint8_t id_bit, cmp_id_bit;
+	uint8_t id_bit_number;
+   	uint8_t last_zero, rom_byte_number;
+	bool    search_result;
+   	uint8_t id_bit, cmp_id_bit;
 
-   unsigned char rom_byte_mask, search_direction;
+   	unsigned char rom_byte_mask, search_direction;
 
-   // initialize for search
-   id_bit_number = 1;
-   last_zero = 0;
-   rom_byte_number = 0;
-   rom_byte_mask = 1;
-   search_result = false;
+   	// initialize for search
+   	id_bit_number = 1;
+   	last_zero = 0;
+   	rom_byte_number = 0;
+   	rom_byte_mask = 1;
+   	search_result = false;
 
-   // if the last call was not the last one
-   if (!LastDeviceFlag) {
-      // 1-Wire reset
-      if (!reset()) {
-         // reset the search
-         LastDiscrepancy = 0;
-         LastDeviceFlag = false;
-         LastFamilyDiscrepancy = 0;
-         return false;
-      }
+   	// if the last call was not the last one
+   	if (!LastDeviceFlag) {
+    	// 1-Wire reset
+     	if (!reset()) {
+       		// reset the search
+       		LastDiscrepancy = 0;
+       		LastDeviceFlag = false;
+			LastFamilyDiscrepancy = 0;
+       		return false;
+    	}
 
-      // issue the search command
-      if (search_mode == true) {
-        write(0xF0);   // NORMAL SEARCH
-      } else {
-        write(0xEC);   // CONDITIONAL SEARCH
-      }
+    	// issue the search command
+		if (search_mode == true) {
+        	write(WIRE_COMMAND_SEARCH);   // NORMAL SEARCH
+      	} else {
+        	write(WIRE_COMMAND_COND_SEARCH);   // CONDITIONAL SEARCH
+      	}
 
-      // loop to do the search
-      do
-      {
-         // read a bit and its complement
-         id_bit = read_bit();
-         cmp_id_bit = read_bit();
+    	// loop to do the search
+    	do
+		{
+        	// read a bit and its complement
+         	id_bit = read_bit();
+         	cmp_id_bit = read_bit();
 
-         // check for no devices on 1-wire
-         if ((id_bit == 1) && (cmp_id_bit == 1)) {
-            break;
-         } else {
-            // all devices coupled have 0 or 1
-            if (id_bit != cmp_id_bit) {
-               search_direction = id_bit;  // bit write value for search
-            } else {
-               // if this discrepancy if before the Last Discrepancy
-               // on a previous next then pick the same as last time
-               if (id_bit_number < LastDiscrepancy) {
-                  search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
-               } else {
-                  // if equal to last pick 1, if not then pick 0
-                  search_direction = (id_bit_number == LastDiscrepancy);
-               }
-               // if 0 was picked then record its position in LastZero
-               if (search_direction == 0) {
-                  last_zero = id_bit_number;
+         	// check for no devices on 1-wire
+         	if ((id_bit == 1) && (cmp_id_bit == 1)) {	
+				break;
+         	} else {
+            	// all devices coupled have 0 or 1
+            	if (id_bit != cmp_id_bit) {
+            		search_direction = id_bit;  // bit write value for search
+            	} else {
+            		// if this discrepancy if before the Last Discrepancy
+            		// on a previous next then pick the same as last time
+            		if (id_bit_number < LastDiscrepancy) {
+               			search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
+            		} else {
+               			// if equal to last pick 1, if not then pick 0
+               			search_direction = (id_bit_number == LastDiscrepancy);
+					}
+            		// if 0 was picked then record its position in LastZero
+            		if (search_direction == 0) {
+               			last_zero = id_bit_number;
+						
+						// check for Last discrepancy in family
+                  		if (last_zero < 9)
+                     		LastFamilyDiscrepancy = last_zero;
+            		}
+            	}
 
-                  // check for Last discrepancy in family
-                  if (last_zero < 9)
-                     LastFamilyDiscrepancy = last_zero;
-               }
-            }
+            	// set or clear the bit in the ROM byte rom_byte_number
+            	// with mask rom_byte_mask
+            	if (search_direction == 1)
+            		ROM_NO[rom_byte_number] |= rom_byte_mask;
+            	else
+            		ROM_NO[rom_byte_number] &= ~rom_byte_mask;
 
-            // set or clear the bit in the ROM byte rom_byte_number
-            // with mask rom_byte_mask
-            if (search_direction == 1)
-              ROM_NO[rom_byte_number] |= rom_byte_mask;
-            else
-              ROM_NO[rom_byte_number] &= ~rom_byte_mask;
+           		// serial number search direction write bit
+           		write_bit(search_direction);
 
-            // serial number search direction write bit
-            write_bit(search_direction);
+           		// increment the byte counter id_bit_number
+           		// and shift the mask rom_byte_mask
+           		id_bit_number++;
+           		rom_byte_mask <<= 1;
 
-            // increment the byte counter id_bit_number
-            // and shift the mask rom_byte_mask
-            id_bit_number++;
-            rom_byte_mask <<= 1;
+	            // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
+       		    if (rom_byte_mask == 0) {
+               		rom_byte_number++;
+               		rom_byte_mask = 1;
+           		}
+       		}
+   		}
+   		while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
 
-            // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
-            if (rom_byte_mask == 0) {
-                rom_byte_number++;
-                rom_byte_mask = 1;
-            }
-         }
-      }
-      while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
+   		// if the search was successful then
+   		if (!(id_bit_number < 65)) {
+       		// search successful so set LastDiscrepancy,LastDeviceFlag,search_result
+       		LastDiscrepancy = last_zero;
 
-      // if the search was successful then
-      if (!(id_bit_number < 65)) {
-         // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
-         LastDiscrepancy = last_zero;
+       		// check for last device
+       		if (LastDiscrepancy == 0) {
+            	LastDeviceFlag = true;
+         	}
+       		search_result = true;
+   		}
+	}
 
-         // check for last device
-         if (LastDiscrepancy == 0) {
-            LastDeviceFlag = true;
-         }
-         search_result = true;
-      }
-   }
-
-   // if no device found then reset counters so next 'search' will be like a first
-   if (!search_result || !ROM_NO[0]) {
-      LastDiscrepancy = 0;
-      LastDeviceFlag = false;
-      LastFamilyDiscrepancy = 0;
-      search_result = false;
-   } else {
+	// if no device found then reset counters so next 'search' will be like a first
+	if (!search_result || !ROM_NO[0]) {
+    	LastDiscrepancy = 0;
+    	LastDeviceFlag = false;
+		LastFamilyDiscrepancy = 0;
+    	search_result = false;
+   	} else {
       for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
-   }
-   return search_result;
-  }
+   }	
+   	return search_result;
+}
 
 #endif
 
