@@ -54,10 +54,56 @@
 // Board-specific macros for direct GPIO
 #include "util/OneWire_direct_regtype.h"
 
+#define DS2482_COMMAND_RESET		0xF0	// Device reset
+
+#define DS2482_COMMAND_SRP			0xE1 	// Set read pointer
+	#define DS2482_POINTER_STATUS		0xF0
+		#define DS2482_STATUS_BUSY			(1<<0)
+		#define DS2482_STATUS_PPD			(1<<1)
+		#define DS2482_STATUS_SD			(1<<2)
+		#define DS2482_STATUS_LL			(1<<3)
+		#define DS2482_STATUS_RST 			(1<<4)
+		#define DS2482_STATUS_SBR			(1<<5)
+		#define DS2482_STATUS_TSB 			(1<<6)
+		#define DS2482_STATUS_DIR 			(1<<7)
+	#define DS2482_POINTER_DATA			0xE1
+	#define DS2482_POINTER_CONFIG		0xC3
+		#define DS2482_CONFIG_APU			(1<<0)
+		#define DS2482_CONFIG_SPU			(1<<2)
+		#define DS2482_CONFIG_1WS			(1<<3)
+
+#define DS2482_COMMAND_WRITECONFIG	0xD2
+#define DS2482_COMMAND_RESETWIRE	0xB4
+#define DS2482_COMMAND_WRITEBYTE	0xA5
+#define DS2482_COMMAND_READBYTE		0x96
+#define DS2482_COMMAND_SINGLEBIT	0x87
+#define DS2482_COMMAND_TRIPLET		0x78
+
+#define WIRE_COMMAND_SKIP			0xCC
+#define WIRE_COMMAND_SELECT			0x55
+#define WIRE_COMMAND_SEARCH			0xF0
+#define WIRE_COMMAND_COND_SEARCH	0xEC
+
+#define DS2482_ERROR_TIMEOUT		(1<<0)
+#define DS2482_ERROR_SHORT			(1<<1)
+#define DS2482_ERROR_CONFIG			(1<<2)
+
+// DS2408
+#define DS2408_FAMILY 0x29
+
 class OneWire
 {
-  private:
-    IO_REG_TYPE bitmask;
+private:
+	void begin();
+    uint8_t end();
+	void writeByte(uint8_t);
+	uint8_t readByte();
+
+	uint8_t mAddress;
+	uint8_t mError;
+	uint8_t ds2482present;
+	
+	IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
 
 #if ONEWIRE_SEARCH
@@ -68,32 +114,31 @@ class OneWire
     bool LastDeviceFlag;
 #endif
 
-  public:
-    OneWire(uint8_t pin) { begin(pin); }
-    void begin(uint8_t pin);
+public:
+	OneWire(uint8_t address, bool ds2482 = false);
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
     // bus is shorted or otherwise held low for more than 250uS
-    uint8_t reset(void);
+	uint8_t reset(void);
 
     // Issue a 1-Wire rom select command, you do the reset first.
     void select(const uint8_t rom[8]);
 
     // Issue a 1-Wire rom skip command, to address all on bus.
-    void skip(void);
-
-    // Write a byte. If 'power' is one then the wire is held high at
+	void skip(void);
+	
+	// Write a byte. If 'power' is one then the wire is held high at
     // the end for parasitically powered devices. You are responsible
     // for eventually depowering it by calling depower() or doing
     // another read or write.
-    void write(uint8_t v, uint8_t power = 0);
+    void write(uint8_t v, bool power = 0);
 
     void write_bytes(const uint8_t *buf, uint16_t count, bool power = 0);
 
     // Read a byte.
     uint8_t read(void);
-
+	
     void read_bytes(uint8_t *buf, uint16_t count);
 
     // Write a bit. The bus is always left powered at the end, see
@@ -103,13 +148,32 @@ class OneWire
     // Read a bit.
     uint8_t read_bit(void);
 
-    // Stop forcing power onto the bus. You only need to do this if
+	uint8_t getAddress();
+	uint8_t getError();
+	uint8_t checkPresence();
+
+	void deviceReset();
+	void setReadPointer(uint8_t readPointer);
+	uint8_t readStatus();
+	uint8_t readData();
+	uint8_t waitOnBusy();
+	uint8_t readConfig();
+	void writeConfig(uint8_t config);
+	void setStrongPullup();
+	void clearStrongPullup();
+	uint8_t wireReset();
+	void wireWriteByte(uint8_t data, uint8_t power = 0);
+	uint8_t wireReadByte();
+	void wireWriteBit(uint8_t data, uint8_t power = 0);
+	uint8_t wireReadBit();
+	
+	// Stop forcing power onto the bus. You only need to do this if
     // you used the 'power' flag to write() or used a write_bit() call
     // and aren't about to do another read or write. You would rather
     // not leave this powered if you don't have to, just in case
     // someone shorts your bus.
     void depower(void);
-
+    
 #if ONEWIRE_SEARCH
     // Clear the search state so that if will start from the beginning again.
     void reset_search();
