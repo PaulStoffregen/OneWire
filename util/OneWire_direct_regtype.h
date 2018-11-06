@@ -30,6 +30,9 @@
 #define IO_REG_TYPE uint32_t
 #define IO_REG_MASK_ATTR
 
+#elif defined(ARDUINO_ARCH_STM32)
+#define IO_REG_TYPE uint32_t
+
 #elif defined(__SAMD21G18A__)
 #define IO_REG_TYPE uint32_t
 
