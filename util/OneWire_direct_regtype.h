@@ -11,6 +11,9 @@
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__)
 #define IO_REG_TYPE uint8_t
 
+#elif defined(__IMXRT1052__) || defined(__IMXRT1062__)
+#define IO_REG_TYPE uint32_t
+
 #elif defined(__MKL26Z64__)
 #define IO_REG_TYPE uint8_t
 

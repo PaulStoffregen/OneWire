@@ -53,6 +53,18 @@
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+8) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
 
+#elif defined(__IMXRT1052__) || defined(__IMXRT1062__)
+#define PIN_TO_BASEREG(pin)             (portOutputRegister(pin))
+#define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
+#define IO_REG_TYPE uint32_t
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
+#define DIRECT_READ(base, mask)         ((*((base)+2) & (mask)) ? 1 : 0)
+#define DIRECT_MODE_INPUT(base, mask)   (*((base)+1) &= ~(mask))
+#define DIRECT_MODE_OUTPUT(base, mask)  (*((base)+1) |= (mask))
+#define DIRECT_WRITE_LOW(base, mask)    (*((base)+34) = (mask))
+#define DIRECT_WRITE_HIGH(base, mask)   (*((base)+33) = (mask))
+
 #elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__)
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
 // http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
