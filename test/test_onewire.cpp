@@ -3,6 +3,13 @@
 
 #define PIN 10
 
+int delayToBit(unsigned long* timestamps, int lowIndex) {
+  int duration = timestamps[lowIndex + 1] - timestamps[lowIndex];
+  if (duration <= 15) return 1;
+  if (duration >= 60) return 0;
+  return -1; // indicating error
+}
+
 // use GODMODE to test pins
 GodmodeState* state = GODMODE();
 
@@ -29,15 +36,23 @@ unittest(failed_search)
 
 unittest(write_a_0)
 {
-  bool actual[5]; // to store actual values written to pin
+  bool actual[5];          // to store actual values written to pin
+  unsigned long timing[5]; // to store event timestamps
+  int numEntries;
 
   // write a zero and verify
   OneWire ow(PIN);
   ow.write_bit(0);
   assertEqual(3, state->digitalPin[PIN].historySize());
-  state->digitalPin[PIN].toArray(actual, 5);
+  numEntries = state->digitalPin[PIN].toArray(actual, 5);
+  assertEqual(3, numEntries);  // initial state plus low-high
   assertEqual(LOW, actual[1]);
   assertEqual(HIGH, actual[2]);
+
+  // assert that the timing indicates a 0
+  state->digitalPin[PIN].toTimestampArray(timing, 5);
+  assertEqual(0, delayToBit(timing, 1));
+
 
   // same thing but for writing a 1
   state->reset();
@@ -47,8 +62,9 @@ unittest(write_a_0)
   assertEqual(LOW, actual[1]);
   assertEqual(HIGH, actual[2]);
 
-  // in future versions of arduino_ci, we can add timestamps to the history queues
-  // https://github.com/ianfixes/arduino_ci/issues/23
+  // assert that the timing indicates a 1
+  state->digitalPin[PIN].toTimestampArray(timing, 5);
+  assertEqual(1, delayToBit(timing, 1));
 }
 
 unittest(write_a_byte_no_power)
@@ -71,6 +87,7 @@ unittest(write_a_byte_no_power)
     LOW
   };
   bool actual[18];
+  unsigned long timing[18]; // to store event timestamps
 
   // convert history queue into an array so we can verify it.
   state->digitalPin[PIN].toArray(actual, 18);
@@ -79,6 +96,18 @@ unittest(write_a_byte_no_power)
   for (int i = 0; i < 18; ++i) {
     assertEqual(expected[i], actual[i]);
   }
+
+  // verify transmitted data, apparently it goes across little-endian
+  // 0xAC -> 10101100 becomes 00110101
+  state->digitalPin[PIN].toTimestampArray(timing, 18);
+  assertEqual(0, delayToBit(timing, 1));
+  assertEqual(0, delayToBit(timing, 3));
+  assertEqual(1, delayToBit(timing, 5));
+  assertEqual(1, delayToBit(timing, 7));
+  assertEqual(0, delayToBit(timing, 9));
+  assertEqual(1, delayToBit(timing, 11));
+  assertEqual(0, delayToBit(timing, 13));
+  assertEqual(1, delayToBit(timing, 15));
 }
 
 // and now a blatant copy-paste
