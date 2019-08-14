@@ -56,9 +56,10 @@
 
 class OneWire
 {
-  private:
+  protected:
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
+    uint8_t trec;
 
 #if ONEWIRE_SEARCH
     // global search state
@@ -70,8 +71,8 @@ class OneWire
 
   public:
     OneWire() { }
-    OneWire(uint8_t pin) { begin(pin); }
-    void begin(uint8_t pin);
+    OneWire(uint8_t pin,uint8_t trec=5) { begin(pin,trec); }
+    void begin(uint8_t pin,uint8_t trec);
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the

@@ -144,11 +144,12 @@ sample code bearing this copyright.
 #include "util/OneWire_direct_gpio.h"
 
 
-void OneWire::begin(uint8_t pin)
+void OneWire::begin(uint8_t pin,uint8_t trec /*=5*/)
 {
 	pinMode(pin, INPUT);
 	bitmask = PIN_TO_BITMASK(pin);
 	baseReg = PIN_TO_BASEREG(pin);
+  this->trec=trec;
 #if ONEWIRE_SEARCH
 	reset_search();
 #endif
@@ -215,7 +216,7 @@ void OneWire::write_bit(uint8_t v)
 		delayMicroseconds(65);
 		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
 		interrupts();
-		delayMicroseconds(5);
+		delayMicroseconds(trec); //configurable recovery time for longer networks
 	}
 }
 
@@ -237,7 +238,8 @@ uint8_t OneWire::read_bit(void)
 	delayMicroseconds(10);
 	r = DIRECT_READ(reg, mask);
 	interrupts();
-	delayMicroseconds(53);
+	delayMicroseconds(48);
+	delayMicroseconds(trec);
 	return r;
 }
 
