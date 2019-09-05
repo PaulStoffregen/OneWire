@@ -102,6 +102,10 @@ class OneWire
     // note in write() about that.
     void write_bit(uint8_t v);
 
+    // Write a bit. The bus is always left powered at the end, see
+    // note in write() about that.
+    void write_bit_rw1990(uint8_t v);
+
     // Read a bit.
     uint8_t read_bit(void);
 

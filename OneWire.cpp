@@ -221,6 +221,34 @@ void OneWire::write_bit(uint8_t v)
 }
 
 //
+// Write a bit. Port and bit is used to cut lookup time and provide
+// more certain timing.
+// Has changed timing and inversion to suit RW1990 ID writing.
+//
+void OneWire::write_bit_rw1990(uint8_t v)
+{
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+
+	if (v & 1) {
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(60);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		interrupts();
+	} else {
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(10);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		interrupts();
+	}
+  delay(10);
+}
+
+//
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
