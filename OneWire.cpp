@@ -143,7 +143,25 @@ sample code bearing this copyright.
 #include "OneWire.h"
 #include "util/OneWire_direct_gpio.h"
 
+#ifdef ESP32_RMT
+bool OneWire::begin(uint8_t pin, rmt_channel_t tx_channel, rmt_channel_t rx_channel)
+{
+	owb_status status;
+	
+	bus.gpio = pin;
+	status = owb_rmt_init(&bus, bus.gpio, tx_channel, rx_channel);
 
+	if(status == OWB_STATUS_OK)
+	{
+#if ONEWIRE_SEARCH
+	  reset_search();
+#endif
+		bus.initialized = true;
+		return true;
+	}
+	else return false;
+}
+#else
 void OneWire::begin(uint8_t pin)
 {
 	pinMode(pin, INPUT);
@@ -153,6 +171,7 @@ void OneWire::begin(uint8_t pin)
 	reset_search();
 #endif
 }
+#endif
 
 
 // Perform the onewire reset function.  We will wait up to 250uS for
@@ -162,6 +181,18 @@ void OneWire::begin(uint8_t pin)
 // Returns 1 if a device asserted a presence pulse, 0 otherwise.
 //
 uint8_t OneWire::reset(void)
+#ifdef ESP32_RMT
+{
+	bool is_present = false;
+
+	if(bus.initialized == true)
+	{
+		owb_rmt_reset(&bus, &is_present);
+	}
+
+	return(is_present);
+}
+#else
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -190,12 +221,21 @@ uint8_t OneWire::reset(void)
 	delayMicroseconds(410);
 	return r;
 }
+#endif
 
 //
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
 void OneWire::write_bit(uint8_t v)
+#ifdef ESP32_RMT
+{
+  if(bus.initialized == true)
+  {
+    owb_rmt_write_bits(&bus, v, 1);
+  }
+}
+#else
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -218,12 +258,25 @@ void OneWire::write_bit(uint8_t v)
 		delayMicroseconds(5);
 	}
 }
+#endif 
 
 //
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
 uint8_t OneWire::read_bit(void)
+#ifdef ESP32_RMT
+{
+  uint8_t r=0;
+
+  if(bus.initialized == true)
+  {
+    owb_rmt_read_bits(&bus, &r, 1);
+  }
+
+  return r;
+}
+#else
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -240,6 +293,7 @@ uint8_t OneWire::read_bit(void)
 	delayMicroseconds(53);
 	return r;
 }
+#endif
 
 //
 // Write a byte. The writing code uses the active drivers to raise the
@@ -248,7 +302,16 @@ uint8_t OneWire::read_bit(void)
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
+void OneWire::write(uint8_t v, uint8_t power /* = 0 */)
+#ifdef ESP32_RMT
+{
+  if(bus.initialized == true)
+  {
+    owb_rmt_write_bits(&bus, v, 8);
+  }
+}
+#else
+{
     uint8_t bitMask;
 
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
@@ -261,22 +324,38 @@ void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
 	interrupts();
     }
 }
+#endif
 
 void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
   for (uint16_t i = 0 ; i < count ; i++)
     write(buf[i]);
+#ifndef ESP32_RMT
   if (!power) {
     noInterrupts();
     DIRECT_MODE_INPUT(baseReg, bitmask);
     DIRECT_WRITE_LOW(baseReg, bitmask);
     interrupts();
   }
+#endif
 }
 
 //
 // Read a byte
 //
-uint8_t OneWire::read() {
+uint8_t OneWire::read()
+#ifdef ESP32_RMT
+{
+  uint8_t r=0;
+
+  if(bus.initialized == true)
+  {
+    owb_rmt_read_bits(&bus, &r, 8);
+  }
+
+  return r;
+}
+#else
+{
     uint8_t bitMask;
     uint8_t r = 0;
 
@@ -285,6 +364,7 @@ uint8_t OneWire::read() {
     }
     return r;
 }
+#endif
 
 void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
   for (uint16_t i = 0 ; i < count ; i++)
@@ -313,9 +393,11 @@ void OneWire::skip()
 
 void OneWire::depower()
 {
+#ifndef ESP32_RMT
 	noInterrupts();
 	DIRECT_MODE_INPUT(baseReg, bitmask);
 	interrupts();
+#endif
 }
 
 #if ONEWIRE_SEARCH

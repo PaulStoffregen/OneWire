@@ -32,28 +32,36 @@
 #include "freertos/ringbuf.h"
 #include "driver/rmt.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct
 {
-  int tx_channel;     ///< RMT channel to use for TX
-  int rx_channel;     ///< RMT channel to use for RX
-  RingbufHandle_t rb; ///< Ring buffer handle
-  int gpio;           ///< OneWireBus GPIO
-  OneWireBus bus;     ///< OneWireBus instance
-} owb_rmt_driver_info;
+  rmt_channel_t tx_channel;     ///< RMT channel to use for TX
+  rmt_channel_t rx_channel;     ///< RMT channel to use for RX
+  RingbufHandle_t rb;           ///< Ring buffer handle
+  int gpio;                     ///< OneWireBus GPIO
+  bool initialized;             ///< Flag indicating if the driver is init
+} OneWireBus;
+
+typedef enum
+{
+    OWB_STATUS_OK,
+    OWB_STATUS_NOT_INITIALIZED,
+    OWB_STATUS_PARAMETER_NULL,
+    OWB_STATUS_DEVICE_NOT_RESPONDING,
+    OWB_STATUS_CRC_FAILED,
+    OWB_STATUS_TOO_MANY_BITS,
+    OWB_STATUS_HW_ERROR
+} owb_status;
 
 /**
  * @brief Initialise the RMT driver.
  * @return OneWireBus*, pass this into the other OneWireBus public API functions
  */
-OneWireBus* owb_rmt_initialize(owb_rmt_driver_info *info, uint8_t gpio_num,
-                               rmt_channel_t tx_channel, rmt_channel_t rx_channel);
+owb_status owb_rmt_init(OneWireBus *bus, uint8_t gpio_num, rmt_channel_t tx_channel, rmt_channel_t rx_channel);
 
-#ifdef __cplusplus
-}
-#endif
+owb_status owb_rmt_reset(const OneWireBus *bus, bool *is_present);
+
+owb_status owb_rmt_write_bits(const OneWireBus *bus, uint8_t out, int number_of_bits_to_write);
+
+owb_status owb_rmt_read_bits(const OneWireBus *bus, uint8_t *in, int number_of_bits_to_read);
 
 #endif // OWB_RMT_H

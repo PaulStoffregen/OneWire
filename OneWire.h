@@ -51,14 +51,31 @@
 #define ONEWIRE_CRC16 1
 #endif
 
+// You can use RMT driver for ESP32 for reliability #undef if not used
+#define ESP32_RMT 1
+#if defined(ESP32_RMT) && !defined(ARDUINO_ARCH_ESP32) 
+//Only valid for ESP32 architecture
+#error "RMT driver can only be used on ESP32 architecture"
+#endif 
+
+
 // Board-specific macros for direct GPIO
 #include "util/OneWire_direct_regtype.h"
+
+// ESP32 RMT Driver
+#ifdef ESP32_RMT
+#include "owb_rmt.h"
+#endif
 
 class OneWire
 {
   private:
+#ifdef ESP32_RMT
+	OneWireBus bus;
+#else	
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
+#endif
 
 #if ONEWIRE_SEARCH
     // global search state
@@ -69,9 +86,14 @@ class OneWire
 #endif
 
   public:
+#ifdef ESP32_RMT
+    OneWire() {bus.initialized = false;}
+	bool begin(uint8_t pin, rmt_channel_t tx_channel = RMT_CHANNEL_1, rmt_channel_t rx_channel = RMT_CHANNEL_0);
+#else
     OneWire() { }
     OneWire(uint8_t pin) { begin(pin); }
     void begin(uint8_t pin);
+#endif
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
