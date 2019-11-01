@@ -10,7 +10,7 @@ OneWire lets you access 1-wire devices, such as temperature sensors and ibutton 
 
 1. In the Arduino IDE, navigate to Sketch > Include Library > Manage Libraries
 1. Then the Library Manager will open and you will find a list of libraries that are already installed or ready for installation.
-1. Then search for EduIntro using the search bar.
+1. Then search for OneWire using the search bar.
 1. Click on the text area and then select the zpecific version and install it.
 
 ### Second Method
