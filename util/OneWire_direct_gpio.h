@@ -106,7 +106,7 @@
 // DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
 // on ESP community forums.
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
-#define PIN_TO_BITMASK(pin)             (1 << pin)
+ #define PIN_TO_BITMASK(pin) (1UL << (pin))
 #define IO_REG_TYPE uint32_t
 #define IO_REG_BASE_ATTR
 #define IO_REG_MASK_ATTR
