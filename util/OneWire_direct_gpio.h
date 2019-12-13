@@ -106,15 +106,54 @@
 // DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
 // on ESP community forums.
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
-#define PIN_TO_BITMASK(pin)             (1 << pin)
+#define PIN_TO_BITMASK(pin)             (1UL << (pin))
 #define IO_REG_TYPE uint32_t
 #define IO_REG_BASE_ATTR
 #define IO_REG_MASK_ATTR
-#define DIRECT_READ(base, mask)         ((GPI & (mask)) ? 1 : 0)    //GPIO_IN_ADDRESS
-#define DIRECT_MODE_INPUT(base, mask)   (GPE &= ~(mask))            //GPIO_ENABLE_W1TC_ADDRESS
-#define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
-#define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
-#define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
+
+static inline __attribute__((always_inline))
+void directModeInput(IO_REG_TYPE mask)
+{
+    if(mask > 0x8000)
+    {
+        GP16FFS(GPFFS_GPIO(16));
+        GPC16 = 0;
+        GP16E &= ~1;
+    }
+    else
+    {
+        GPE &= ~(mask);
+    }
+}
+
+static inline __attribute__((always_inline))
+void directModeOutput(IO_REG_TYPE mask)
+{
+    if(mask > 0x8000)
+    {
+        GP16FFS(GPFFS_GPIO(16));
+        GPC16 = 0; 
+        GP16E |= 1;
+    }
+    else
+    {
+        GPE |= (mask);
+    }
+}
+static inline __attribute__((always_inline))
+bool directRead(IO_REG_TYPE mask)
+{
+    if(mask > 0x8000)
+        return GP16I & 0x01;
+    else
+        return ((GPI & (mask)) ? true : false);
+}
+
+#define DIRECT_READ(base, mask)             directRead(mask)
+#define DIRECT_MODE_INPUT(base, mask)       directModeInput(mask)
+#define DIRECT_MODE_OUTPUT(base, mask)      directModeOutput(mask)
+#define DIRECT_WRITE_LOW(base, mask)    (mask > 0x8000) ? GP16O &= ~1 : (GPOC = (mask))
+#define DIRECT_WRITE_HIGH(base, mask)   (mask > 0x8000) ? GP16O |= 1 : (GPOS = (mask))
 
 #elif defined(ARDUINO_ARCH_ESP32)
 #include <driver/rtc_io.h>
