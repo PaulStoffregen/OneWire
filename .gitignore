@@ -1,0 +1,6 @@
+# arduino_ci unit test files
+*.bin
+*.bin.dSYM
+
+# arduino_ci ruby bundle lockfile
+Gemfile.lock

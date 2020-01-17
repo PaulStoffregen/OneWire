@@ -1,0 +1,7 @@
+compile:
+  platforms:
+    - due
+
+unittest:
+  platforms:
+    - due
