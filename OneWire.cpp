@@ -32,6 +32,11 @@ private email about OneWire).
 OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
+  ESP32 mods authored by stickbreaker:
+  @stickbreaker 30APR2018 add IRAM_ATTR to read_bit() write_bit() to solve ICache miss timing failure. 
+      thanks @everslick re:  https://github.com/espressif/arduino-esp32/issues/1335
+  Altered by garyd9 for clean merge with Paul Stoffregen's source
+
 Version 2.3:
   Unknown chip fallback mode, Roger Clark
   Teensy-LC compatibility, Paul Stoffregen
@@ -143,6 +148,16 @@ sample code bearing this copyright.
 #include "OneWire.h"
 #include "util/OneWire_direct_gpio.h"
 
+#ifdef ARDUINO_ARCH_ESP32
+// due to the dual core esp32, a critical section works better than disabling interrupts
+#  define noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
+#  define interrupts() portEXIT_CRITICAL(&mux);}
+// for info on this, search "IRAM_ATTR" at https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/general-notes.html 
+#  define CRIT_TIMING IRAM_ATTR
+#else
+#  define CRIT_TIMING 
+#endif
+
 
 void OneWire::begin(uint8_t pin)
 {
@@ -161,7 +176,7 @@ void OneWire::begin(uint8_t pin)
 //
 // Returns 1 if a device asserted a presence pulse, 0 otherwise.
 //
-uint8_t OneWire::reset(void)
+uint8_t CRIT_TIMING OneWire::reset(void)
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -195,7 +210,7 @@ uint8_t OneWire::reset(void)
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-void OneWire::write_bit(uint8_t v)
+void CRIT_TIMING OneWire::write_bit(uint8_t v)
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -223,7 +238,7 @@ void OneWire::write_bit(uint8_t v)
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-uint8_t OneWire::read_bit(void)
+uint8_t CRIT_TIMING OneWire::read_bit(void)
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -578,3 +593,11 @@ uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
 #endif
 
 #endif
+
+// undef defines for no particular reason
+#ifdef ARDUINO_ARCH_ESP32
+#  undef noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
+#  undef interrupts() portEXIT_CRITICAL(&mux);}
+#endif
+// for info on this, search "IRAM_ATTR" at https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/general-notes.html 
+#undef CRIT_TIMING 
