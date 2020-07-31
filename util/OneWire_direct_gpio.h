@@ -15,7 +15,7 @@
 #define IO_REG_TYPE uint8_t
 #define IO_REG_BASE_ATTR asm("r30")
 #define IO_REG_MASK_ATTR
-#if defined(__AVR_ATmega4809__)
+#if (__AVR_ARCH__ == 103) || (__AVR_ARCH__ == 104)
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)-8)) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)-8)) |= (mask))
