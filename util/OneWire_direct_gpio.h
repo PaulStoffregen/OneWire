@@ -10,18 +10,19 @@
 // Platform specific I/O definitions
 
 #if defined(__AVR__)
-#define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint8_t
 #define IO_REG_BASE_ATTR asm("r30")
 #define IO_REG_MASK_ATTR
 #if (__AVR_ARCH__ == 103) || (__AVR_ARCH__ == 104)
-#define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
-#define DIRECT_MODE_INPUT(base, mask)   ((*((base)-8)) &= ~(mask))
-#define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)-8)) |= (mask))
-#define DIRECT_WRITE_LOW(base, mask)    ((*((base)-4)) &= ~(mask))
-#define DIRECT_WRITE_HIGH(base, mask)   ((*((base)-4)) |= (mask))
+#define PIN_TO_BASEREG(pin)             (((digitalPinToPort(pin))<<2))
+#define DIRECT_READ(base, mask)         (((*((base+2)) & (mask)) ? 1 : 0)
+#define DIRECT_MODE_INPUT(base, mask)   ((*(base)) &= ~(mask))
+#define DIRECT_MODE_OUTPUT(base, mask)  ((*(base)) |= (mask))
+#define DIRECT_WRITE_LOW(base, mask)    ((*(base)+1)) &= ~(mask))
+#define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+1)) |= (mask))
 #else
+#define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
