@@ -19,7 +19,7 @@
 #define DIRECT_READ(base, mask)         (((*((base+2)) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*(base)) &= ~(mask))
 #define DIRECT_MODE_OUTPUT(base, mask)  ((*(base)) |= (mask))
-#define DIRECT_WRITE_LOW(base, mask)    ((*(base)+1)) &= ~(mask))
+#define DIRECT_WRITE_LOW(base, mask)    ((*((base)+1)) &= ~(mask))
 #define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+1)) |= (mask))
 #else
 #define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
