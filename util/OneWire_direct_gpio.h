@@ -14,7 +14,7 @@
 #define IO_REG_TYPE uint8_t
 #define IO_REG_BASE_ATTR asm("r30")
 #define IO_REG_MASK_ATTR
-#if (__AVR_ARCH__ == 103) || (__AVR_ARCH__ == 104)
+#if ((__AVR_ARCH__ == 102) || (__AVR_ARCH__ == 103) || (__AVR_ARCH__ == 104))
 #define PIN_TO_BASEREG(pin)             ((volatile uint8_t*)((digitalPinToPort(pin))<<2))
 #define DIRECT_READ(base, mask)         ((*((base)+2) & (mask)) ? 1 : 0)
 #define DIRECT_MODE_INPUT(base, mask)   ((*(base)) &= ~(mask))
