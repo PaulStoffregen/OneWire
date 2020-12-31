@@ -262,7 +262,7 @@ void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
     }
 }
 
-void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
+void OneWire::write_bytes(const uint8_t *buf, uint16_t count, uint8_t power /* = 0 */) {
   for (uint16_t i = 0 ; i < count ; i++)
     write(buf[i]);
   if (!power) {
