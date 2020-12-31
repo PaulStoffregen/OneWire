@@ -90,7 +90,7 @@ class OneWire
     // another read or write.
     void write(uint8_t v, uint8_t power = 0);
 
-    void write_bytes(const uint8_t *buf, uint16_t count, bool power = 0);
+    void write_bytes(const uint8_t *buf, uint16_t count, uint8_t power = 0);
 
     // Read a byte.
     uint8_t read(void);
