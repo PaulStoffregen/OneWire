@@ -5,7 +5,14 @@
 
 // Platform specific I/O register type
 
-#if defined(__AVR__)
+#if (defined(__AVR_ATtiny804__) || defined(__AVR_ATtiny806__) || defined(__AVR_ATtiny807__) || defined(__AVR_ATtiny1604__) \
+  || defined(__AVR_ATtiny1606__) || defined(__AVR_ATtiny1607__) || defined(__AVR_ATtiny1614__) || defined(__AVR_ATtiny1616__) \
+  || defined(__AVR_ATtiny1617__) || defined(__AVR_ATtiny3216__) || defined(__AVR_ATtiny3217__) )
+
+	#define IO_REG_TYPE PORT_t
+	#define IO_BITMASK_TYPE uint8_t
+
+#elif defined(__AVR__)
 #define IO_REG_TYPE uint8_t
 
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK66FX1M0__) || defined(__MK64FX512__)
@@ -52,4 +59,10 @@
 #define IO_REG_TYPE unsigned int
 
 #endif
+
+// Define default IO_BITMASK_TYPE as same as IO_REG_TYPE
+#ifndef IO_BITMASK_TYPE
+#define IO_BITMASK_TYPE IO_REG_TYPE
+#endif
+
 #endif

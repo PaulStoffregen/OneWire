@@ -9,7 +9,24 @@
 
 // Platform specific I/O definitions
 
-#if defined(__AVR__)
+#if (defined(__AVR_ATtiny804__) || defined(__AVR_ATtiny806__) || defined(__AVR_ATtiny807__) || defined(__AVR_ATtiny1604__) \
+  || defined(__AVR_ATtiny1606__) || defined(__AVR_ATtiny1607__) || defined(__AVR_ATtiny1614__) || defined(__AVR_ATtiny1616__) \
+  || defined(__AVR_ATtiny1617__) || defined(__AVR_ATtiny3216__) || defined(__AVR_ATtiny3217__) )
+
+#define PIN_TO_BASEREG(pin)             (digitalPinToPortStruct(pin))
+#define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
+#define IO_BITMASK_TYPE uint8_t
+#define IO_REG_TYPE PORT_t
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
+
+#define DIRECT_READ(port, mask)         ( (port->IN & mask) ? HIGH : LOW  )
+#define DIRECT_MODE_INPUT(port, mask)   ( { port->DIRCLR = mask; port->OUTCLR = mask;} )
+#define DIRECT_MODE_OUTPUT(port, mask)  ( port->DIRSET = mask )
+#define DIRECT_WRITE_LOW(port, mask)    ( port->OUTCLR = mask )
+#define DIRECT_WRITE_HIGH(port, mask)   ( port->OUTSET = mask )
+
+#elif defined(__AVR__)
 #define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
 #define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
 #define IO_REG_TYPE uint8_t
@@ -432,6 +449,11 @@ void directWriteHigh(IO_REG_TYPE mask)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #warning "OneWire. Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite. Operation of this library is not guaranteed on this architecture."
 
+#endif
+
+// Define default IO_BITMASK_TYPE as same as IO_REG_TYPE
+#ifndef IO_BITMASK_TYPE
+#define IO_BITMASK_TYPE IO_REG_TYPE
 #endif
 
 #endif
