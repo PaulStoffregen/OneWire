@@ -158,6 +158,18 @@ void directModeInput(IO_REG_TYPE pin)
 {
     if ( digitalPinIsValid(pin) )
     {
+        #if defined(ESP_ARDUINO_VERSION)
+        #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 0)
+        int pin_io = rtc_io_number_get((gpio_num_t)pin);
+        uint32_t rtc_reg(rtc_io_desc[pin_io].reg);
+
+        if ( rtc_reg ) // RTC pins PULL settings
+        {
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin_io].mux);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin_io].pullup | rtc_io_desc[pin_io].pulldown);
+        }
+        #endif
+        #else
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
 
         if ( rtc_reg ) // RTC pins PULL settings
@@ -165,6 +177,7 @@ void directModeInput(IO_REG_TYPE pin)
             ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
             ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
         }
+        #endif
 
         if ( pin < 32 )
             GPIO.enable_w1tc = ((uint32_t)1 << pin);
@@ -186,6 +199,18 @@ void directModeOutput(IO_REG_TYPE pin)
 {
     if ( digitalPinIsValid(pin) && pin <= 33 ) // pins above 33 can be only inputs
     {
+        #if defined(ESP_ARDUINO_VERSION)
+        #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 0)
+        int pin_io = rtc_io_number_get((gpio_num_t)pin);
+        uint32_t rtc_reg(rtc_io_desc[pin_io].reg);
+
+        if ( rtc_reg ) // RTC pins PULL settings
+        {
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin_io].mux);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin_io].pullup | rtc_io_desc[pin_io].pulldown);
+        }
+        #endif
+        #else
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
 
         if ( rtc_reg ) // RTC pins PULL settings
@@ -193,6 +218,7 @@ void directModeOutput(IO_REG_TYPE pin)
             ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
             ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
         }
+        #endif
 
         if ( pin < 32 )
             GPIO.enable_w1ts = ((uint32_t)1 << pin);
