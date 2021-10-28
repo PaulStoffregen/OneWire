@@ -54,6 +54,17 @@
 // Board-specific macros for direct GPIO
 #include "util/OneWire_direct_regtype.h"
 
+// On ESP32 dual core systems, flash is shared between cores. Disabling
+// interrupts is not enough to guarantee proper timing, because the other
+// core might still be accessing flash and stall the active core. Functions
+// with critical timing therefore need to live in RAM as well.
+// It is expected that this also holds for other multi-core systems.
+#ifdef ONEWIRE_MULTICORE
+    #define MULTI_CORE_ATTR IRAM_ATTR
+#else
+    #define MULTICORE_ATTR
+#endif
+
 class OneWire
 {
   private:
@@ -76,7 +87,7 @@ class OneWire
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
     // bus is shorted or otherwise held low for more than 250uS
-    uint8_t reset(void);
+    uint8_t MULTI_CORE_ATTR reset(void);
 
     // Issue a 1-Wire rom select command, you do the reset first.
     void select(const uint8_t rom[8]);
@@ -92,17 +103,17 @@ class OneWire
 
     void write_bytes(const uint8_t *buf, uint16_t count, bool power = 0);
 
-    // Read a byte.
+    // Read a byte.MULTI_CORE_ATTR
     uint8_t read(void);
 
     void read_bytes(uint8_t *buf, uint16_t count);
 
     // Write a bit. The bus is always left powered at the end, see
     // note in write() about that.
-    void write_bit(uint8_t v);
+    void MULTI_CORE_ATTR write_bit(uint8_t v);
 
     // Read a bit.
-    uint8_t read_bit(void);
+    uint8_t MULTI_CORE_ATTR read_bit(void);
 
     // Stop forcing power onto the bus. You only need to do this if
     // you used the 'power' flag to write() or used a write_bit() call
