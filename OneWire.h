@@ -60,6 +60,8 @@ class OneWire
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
 
+    unsigned int bit_delay = 0;
+
 #if ONEWIRE_SEARCH
     // global search state
     unsigned char ROM_NO[8];
@@ -111,6 +113,7 @@ class OneWire
     // someone shorts your bus.
     void depower(void);
 
+    void set_bit_delay(unsigned int d);
 #if ONEWIRE_SEARCH
     // Clear the search state so that if will start from the beginning again.
     void reset_search();
