@@ -59,7 +59,6 @@ class OneWire
   private:
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
-    bool onlyPoolUp;
 
 #if ONEWIRE_SEARCH
     // global search state
@@ -70,8 +69,9 @@ class OneWire
 #endif
 
   public:
-    OneWire() { }
-    OneWire(uint8_t pin) { begin(pin); }
+    bool onlyPoolUp;
+    OneWire() { onlyPoolUp=false; }
+    OneWire(uint8_t pin) { onlyPoolUp=false; begin(pin); }
     void begin(uint8_t pin);
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
