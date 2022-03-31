@@ -205,7 +205,14 @@ void OneWire::write_bit(uint8_t v)
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+                if (onlyPoolUp)
+                {
+                   DIRECT_MODE_INPUT(reg, mask);      // onlyPoolUp resistor pool pin at high value.
+                }
+                else
+                {
+  		   DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+                }
 		interrupts();
 		delayMicroseconds(55);
 	} else {
@@ -213,10 +220,18 @@ void OneWire::write_bit(uint8_t v)
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+                if (onlyPoolUp)
+                {
+                   DIRECT_MODE_INPUT(reg, mask);      // onlyPoolUp resistor pool pin at high value.
+                }
+                else
+                {
+  		   DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+                }
 		interrupts();
 		delayMicroseconds(5);
 	}
+
 }
 
 //
