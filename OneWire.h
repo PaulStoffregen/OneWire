@@ -59,6 +59,7 @@ class OneWire
   private:
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
+    bool onlyPoolUp;
 
 #if ONEWIRE_SEARCH
     // global search state
