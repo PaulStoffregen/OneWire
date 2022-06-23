@@ -427,6 +427,20 @@ void directWriteHigh(IO_REG_TYPE mask)
 #define DIRECT_MODE_INPUT(base, mask)    directModeInput(mask)
 #define DIRECT_MODE_OUTPUT(base, mask)   directModeOutput(mask)
 
+#elif defined(ARDUINO_ARCH_MBED_RP2040)|| defined(ARDUINO_ARCH_RP2040)
+#define delayMicroseconds(time)         busy_wait_us(time)
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (pin)
+#define IO_REG_TYPE unsigned int
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
+#define DIRECT_READ(base, pin)          digitalRead(pin)
+#define DIRECT_WRITE_LOW(base, pin)     digitalWrite(pin, LOW)
+#define DIRECT_WRITE_HIGH(base, pin)    digitalWrite(pin, HIGH)
+#define DIRECT_MODE_INPUT(base, pin)    pinMode(pin,INPUT)
+#define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
+#warning "OneWire. RP2040 in Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite."
+
 #else
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
