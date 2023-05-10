@@ -427,6 +427,26 @@ void directWriteHigh(IO_REG_TYPE mask)
 #define DIRECT_MODE_INPUT(base, mask)    directModeInput(mask)
 #define DIRECT_MODE_OUTPUT(base, mask)   directModeOutput(mask)
 
+#elif defined(__MBED__)
+
+#include "platform/mbed_critical.h"
+#include "DigitalInOut.h"
+#include <cmsis_os2.h>
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (new mbed::DigitalInOut(digitalPinToPinName(pin)))
+#define IO_REG_TYPE                     mbed::DigitalInOut*
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
+#define DIRECT_READ(base, pin)          (*pin)
+#define DIRECT_WRITE_LOW(base, pin)     (*pin = 0)
+#define DIRECT_WRITE_HIGH(base, pin)    (*pin = 1)
+#define DIRECT_MODE_INPUT(base, pin)    (pin->input())
+#define DIRECT_MODE_OUTPUT(base, pin)   (pin->output())
+#undef interrupts
+#undef noInterrupts
+#define noInterrupts()                  osThreadSetPriority(osThreadGetId(), osPriorityRealtime) //core_util_critical_section_enter()
+#define interrupts()                    osThreadSetPriority(osThreadGetId(), osPriorityNormal) //core_util_critical_section_exit()
+
 #elif defined(ARDUINO_ARCH_MBED_RP2040)|| defined(ARDUINO_ARCH_RP2040)
 #define delayMicroseconds(time)         busy_wait_us(time)
 #define PIN_TO_BASEREG(pin)             (0)
