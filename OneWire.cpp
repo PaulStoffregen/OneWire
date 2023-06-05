@@ -266,7 +266,6 @@ uint8_t OneWire::read_bit(void)
 	delayMicroseconds(10);
 	r = DIRECT_READ(reg, mask);
 	interrupts();
-	delayMicroseconds(48);
 	delayMicroseconds(trec);
 	return r;
 }
