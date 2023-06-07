@@ -71,8 +71,8 @@ class OneWire
 
   public:
     OneWire() { }
-    OneWire(uint8_t pin,uint8_t trec=5) { begin(pin,trec); }
-    void begin(uint8_t pin,uint8_t trec=5);
+    OneWire(uint8_t pin,uint8_t trec=50) { begin(pin,trec); }
+    void begin(uint8_t pin,uint8_t trec=50);
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
