@@ -106,15 +106,54 @@
 // DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
 // on ESP community forums.
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
-#define PIN_TO_BITMASK(pin)             (1 << pin)
+#define PIN_TO_BITMASK(pin)             (1UL << (pin))
 #define IO_REG_TYPE uint32_t
 #define IO_REG_BASE_ATTR
 #define IO_REG_MASK_ATTR
-#define DIRECT_READ(base, mask)         ((GPI & (mask)) ? 1 : 0)    //GPIO_IN_ADDRESS
-#define DIRECT_MODE_INPUT(base, mask)   (GPE &= ~(mask))            //GPIO_ENABLE_W1TC_ADDRESS
-#define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
-#define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
-#define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
+
+static inline __attribute__((always_inline))
+void directModeInput(IO_REG_TYPE mask)
+{
+    if(mask > 0x8000)
+    {
+        GP16FFS(GPFFS_GPIO(16));
+        GPC16 = 0;
+        GP16E &= ~1;
+    }
+    else
+    {
+        GPE &= ~(mask);
+    }
+}
+
+static inline __attribute__((always_inline))
+void directModeOutput(IO_REG_TYPE mask)
+{
+    if(mask > 0x8000)
+    {
+        GP16FFS(GPFFS_GPIO(16));
+        GPC16 = 0; 
+        GP16E |= 1;
+    }
+    else
+    {
+        GPE |= (mask);
+    }
+}
+static inline __attribute__((always_inline))
+bool directRead(IO_REG_TYPE mask)
+{
+    if(mask > 0x8000)
+        return GP16I & 0x01;
+    else
+        return ((GPI & (mask)) ? true : false);
+}
+
+#define DIRECT_READ(base, mask)             directRead(mask)
+#define DIRECT_MODE_INPUT(base, mask)       directModeInput(mask)
+#define DIRECT_MODE_OUTPUT(base, mask)      directModeOutput(mask)
+#define DIRECT_WRITE_LOW(base, mask)    (mask > 0x8000) ? GP16O &= ~1 : (GPOC = (mask))
+#define DIRECT_WRITE_HIGH(base, mask)   (mask > 0x8000) ? GP16O |= 1 : (GPOS = (mask))
 
 #elif defined(ARDUINO_ARCH_ESP32)
 #include <driver/rtc_io.h>
@@ -426,6 +465,26 @@ void directWriteHigh(IO_REG_TYPE mask)
 #define DIRECT_WRITE_HIGH(base, mask)    directWriteHigh(mask)
 #define DIRECT_MODE_INPUT(base, mask)    directModeInput(mask)
 #define DIRECT_MODE_OUTPUT(base, mask)   directModeOutput(mask)
+
+#elif defined(__MBED__)
+
+#include "platform/mbed_critical.h"
+#include "DigitalInOut.h"
+#include <cmsis_os2.h>
+#define PIN_TO_BASEREG(pin)             (0)
+#define PIN_TO_BITMASK(pin)             (new mbed::DigitalInOut(digitalPinToPinName(pin)))
+#define IO_REG_TYPE                     mbed::DigitalInOut*
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
+#define DIRECT_READ(base, pin)          (*pin)
+#define DIRECT_WRITE_LOW(base, pin)     (*pin = 0)
+#define DIRECT_WRITE_HIGH(base, pin)    (*pin = 1)
+#define DIRECT_MODE_INPUT(base, pin)    (pin->input())
+#define DIRECT_MODE_OUTPUT(base, pin)   (pin->output())
+#undef interrupts
+#undef noInterrupts
+#define noInterrupts()                  osThreadSetPriority(osThreadGetId(), osPriorityRealtime) //core_util_critical_section_enter()
+#define interrupts()                    osThreadSetPriority(osThreadGetId(), osPriorityNormal) //core_util_critical_section_exit()
 
 #elif defined(ARDUINO_ARCH_MBED_RP2040)|| defined(ARDUINO_ARCH_RP2040)
 #define delayMicroseconds(time)         busy_wait_us(time)
