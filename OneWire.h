@@ -56,9 +56,10 @@
 
 class OneWire
 {
-  private:
+  protected:
     IO_REG_TYPE bitmask;
     volatile IO_REG_TYPE *baseReg;
+    uint8_t trec;
 
 #if ONEWIRE_SEARCH
     // global search state
@@ -70,8 +71,8 @@ class OneWire
 
   public:
     OneWire() { }
-    OneWire(uint8_t pin) { begin(pin); }
-    void begin(uint8_t pin);
+    OneWire(uint8_t pin,uint8_t trec=50) { begin(pin,trec); }
+    void begin(uint8_t pin,uint8_t trec=50);
 
     // Perform a 1-Wire reset cycle. Returns 1 if a device responds
     // with a presence pulse.  Returns 0 if there is no device or the
@@ -100,6 +101,10 @@ class OneWire
     // Write a bit. The bus is always left powered at the end, see
     // note in write() about that.
     void write_bit(uint8_t v);
+
+    // Write a bit. The bus is always left powered at the end, see
+    // note in write() about that.
+    void write_bit_rw1990(uint8_t v);
 
     // Read a bit.
     uint8_t read_bit(void);
