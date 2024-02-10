@@ -494,8 +494,9 @@ bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
    } else {
       for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    }
+   depower();
    return search_result;
-  }
+}
 
 #endif
 
