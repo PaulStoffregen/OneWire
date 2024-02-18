@@ -52,6 +52,9 @@
 #elif defined(__riscv)
 #define IO_REG_TYPE uint32_t
 
+#elif defined(ARDUINO_SILABS)
+#define IO_REG_TYPE uint32_t
+
 #else
 #define IO_REG_TYPE unsigned int
 
