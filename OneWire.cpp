@@ -203,7 +203,7 @@ uint8_t CRIT_TIMING OneWire::reset(void)
 	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 	OneWire_interrupts;
 	delayMicroseconds(480);
-	OneWire_noInterrupts;;
+	OneWire_noInterrupts;
 	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
 	delayMicroseconds(70);
 	r = !DIRECT_READ(reg, mask);
