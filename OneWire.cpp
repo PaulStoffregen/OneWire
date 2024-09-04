@@ -159,11 +159,12 @@ sample code bearing this copyright.
 #endif
 
 
-void OneWire::begin(uint8_t pin)
+void OneWire::begin(uint8_t pin,uint8_t trec /*=5*/)
 {
 	pinMode(pin, INPUT);
 	bitmask = PIN_TO_BITMASK(pin);
 	baseReg = PIN_TO_BASEREG(pin);
+  this->trec=trec;
 #if ONEWIRE_SEARCH
 	reset_search();
 #endif
@@ -230,8 +231,36 @@ void CRIT_TIMING OneWire::write_bit(uint8_t v)
 		delayMicroseconds(65);
 		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
 		interrupts();
-		delayMicroseconds(5);
+		delayMicroseconds(trec); //configurable recovery time for longer networks
 	}
+}
+
+//
+// Write a bit. Port and bit is used to cut lookup time and provide
+// more certain timing.
+// Has changed timing and inversion to suit RW1990 ID writing.
+//
+void OneWire::write_bit_rw1990(uint8_t v)
+{
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+
+	if (v & 1) {
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(60);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		interrupts();
+	} else {
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(10);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		interrupts();
+	}
+  delay(10);
 }
 
 //
@@ -252,7 +281,7 @@ uint8_t CRIT_TIMING OneWire::read_bit(void)
 	delayMicroseconds(10);
 	r = DIRECT_READ(reg, mask);
 	interrupts();
-	delayMicroseconds(53);
+	delayMicroseconds(trec);
 	return r;
 }
 
