@@ -501,6 +501,89 @@ void directWriteHigh(IO_REG_TYPE mask)
 #define DIRECT_MODE_OUTPUT(base, pin)   pinMode(pin,OUTPUT)
 #warning "OneWire. RP2040 in Fallback mode. Using API calls for pinMode,digitalRead and digitalWrite."
 
+#elif defined(ARDUINO_SILABS)
+
+#define IO_REG_TYPE uint32_t
+#define IO_REG_BASE_ATTR
+#define IO_REG_MASK_ATTR
+
+uint8_t pin_to_silabs_pin(uint8_t pin) {
+  // The provided pin is PinName - remove the offset from it
+  if(pin >= PIN_NAME_MIN && pin < PIN_NAME_MAX) {
+    return (pin - PIN_NAME_MIN);
+  }
+  // The provided pin is an Arduino pin - convert it to PinName then remove the offset
+  uint8_t pin_mapped = (uint8_t)pinToPinName(pin);
+  return (pin_mapped - PIN_NAME_MIN);
+}
+
+static inline __attribute__((always_inline))
+uint32_t* pin_to_basereg(uint8_t pin) {
+  pin = pin_to_silabs_pin(pin);
+  // Place the pin number into the 'basereg' pointer as a value
+  return (uint32_t*)(uint32_t)pin;
+}
+
+static inline __attribute__((always_inline))
+uint32_t pin_to_bitmask(uint8_t pin) {
+  pin = pin_to_silabs_pin(pin);
+  return 1 << (pin % 16);
+}
+
+static inline __attribute__((always_inline))
+uint32_t direct_read(volatile uint32_t* base, uint32_t mask) {
+  (void)mask;
+  const uint32_t port = (uint32_t)base / 16;
+  const uint32_t pin = (uint32_t)base % 16;
+  return BUS_RegBitRead(&GPIO->P[port].DIN, pin);
+}
+
+static inline __attribute__((always_inline))
+void direct_write_low(volatile uint32_t* base, uint32_t mask) {
+  const uint32_t port = (uint32_t)base / 16;
+  BUS_RegMaskedClear(&GPIO->P[port].DOUT, mask);
+}
+
+static inline __attribute__((always_inline))
+void direct_write_high(volatile uint32_t* base, uint32_t mask) {
+  const uint32_t port = (uint32_t)base / 16;
+  BUS_RegMaskedSet(&GPIO->P[port].DOUT, mask);
+}
+
+static inline __attribute__((always_inline))
+void direct_mode_input(volatile uint32_t* base, uint32_t mask) {
+  (void)mask;
+  const uint32_t port = (uint32_t)base / 16;
+  const uint32_t pin = (uint32_t)base % 16;
+  // The MODEL register controls pins 0-7 and MODEH controls pins 8-15
+  if (pin < 8) {
+    BUS_RegMaskedWrite(&(GPIO->P[port].MODEL), 0xFu << (pin * 4), (uint32_t)gpioModeInput << (pin * 4));
+  } else {
+    BUS_RegMaskedWrite(&(GPIO->P[port].MODEH), 0xFu << ((pin - 8) * 4), (uint32_t)gpioModeInput << ((pin - 8) * 4));
+  }
+}
+
+static inline __attribute__((always_inline))
+void direct_mode_output(volatile uint32_t* base, uint32_t mask) {
+  (void)mask;
+  const uint32_t port = (uint32_t)base / 16;
+  const uint32_t pin = (uint32_t)base % 16;
+  // The MODEL register controls pins 0-7 and MODEH controls pins 8-15
+  if (pin < 8) {
+    BUS_RegMaskedWrite(&(GPIO->P[port].MODEL), 0xFu << (pin * 4), (uint32_t)gpioModePushPull << (pin * 4));
+  } else {
+    BUS_RegMaskedWrite(&(GPIO->P[port].MODEH), 0xFu << ((pin - 8) * 4), (uint32_t)gpioModePushPull << ((pin - 8) * 4));
+  }
+}
+
+#define PIN_TO_BASEREG(pin)              pin_to_basereg(pin)
+#define PIN_TO_BITMASK(pin)              pin_to_bitmask(pin)
+#define DIRECT_READ(base, mask)          direct_read(base, mask)
+#define DIRECT_WRITE_LOW(base, mask)     direct_write_low(base, mask)
+#define DIRECT_WRITE_HIGH(base, mask)    direct_write_high(base, mask)
+#define DIRECT_MODE_INPUT(base, mask)    direct_mode_input(base, mask)
+#define DIRECT_MODE_OUTPUT(base, mask)   direct_mode_output(base, mask)
+
 #else
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
