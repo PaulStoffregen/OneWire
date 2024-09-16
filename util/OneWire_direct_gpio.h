@@ -108,7 +108,7 @@
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1UL << (pin))
 #define IO_REG_TYPE uint32_t
-#define IO_REG_BASE_ATTR
+#define IO_REG_BASE_ATTR __attribute__((unused))
 #define IO_REG_MASK_ATTR
 
 static inline __attribute__((always_inline))
