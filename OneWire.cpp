@@ -232,6 +232,7 @@ void CRIT_TIMING OneWire::write_bit(uint8_t v)
 		interrupts();
 		delayMicroseconds(5);
 	}
+        delayMicroseconds(bit_delay);
 }
 
 //
@@ -253,6 +254,7 @@ uint8_t CRIT_TIMING OneWire::read_bit(void)
 	r = DIRECT_READ(reg, mask);
 	interrupts();
 	delayMicroseconds(53);
+        delayMicroseconds(bit_delay);
 	return r;
 }
 
@@ -331,6 +333,10 @@ void OneWire::depower()
 	noInterrupts();
 	DIRECT_MODE_INPUT(baseReg, bitmask);
 	interrupts();
+}
+
+void OneWire::set_bit_delay(unsigned int d) {
+  bit_delay = d;
 }
 
 #if ONEWIRE_SEARCH
