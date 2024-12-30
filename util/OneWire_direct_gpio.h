@@ -237,7 +237,7 @@ void directModeOutput(IO_REG_TYPE pin)
 #if CONFIG_IDF_TARGET_ESP32C3
     GPIO.enable_w1ts.val = ((uint32_t)1 << (pin));
 #else
-    if ( digitalPinIsValid(pin) && pin <= 33 ) // pins above 33 can be only inputs
+    if ( digitalPinIsValid(pin) /* && pin <= 33 */ ) // Use Any In/Out pins 
     {
 #if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
